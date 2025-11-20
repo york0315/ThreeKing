@@ -82,6 +82,21 @@
             border-radius: 5px;
             width: 80%;
             text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* 輸入錯誤時顯示紅框 */
+        input[type="number"].invalid {
+            border-color: #e74c3c;
+            background-color: #fdecec;
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            font-size: 12px;
+            height: 15px; /* 固定高度避免跳動 */
+            margin-top: -10px;
         }
 
         .binary-container {
@@ -347,7 +362,12 @@
     <div class="container">
         <h2>每日密碼</h2>
         <div class="input-group">
-            <input type="number" id="decimalInput" placeholder="輸入數字 (0-255)" oninput="convertDecimalToBinary()">
+            <!-- 
+                設定 min, max, step 輔助使用者輸入 
+                oninput: 每次輸入時觸發驗證與存檔
+            -->
+            <input type="number" id="decimalInput" placeholder="請輸入5的倍數 (例如 160)" min="5" max="255" step="5" oninput="handlePasswordInput()">
+            <div id="errorMsg" class="error-msg"></div> <!-- 錯誤訊息顯示區 -->
             <div id="binaryContainer" class="binary-container"></div>
         </div>
     </div>
@@ -365,21 +385,26 @@
 </div>
 
 <script>
-    // 版本更新到 v6
-    const STORAGE_KEY = 'dailyKingTimerTabs_v6'; 
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v6'; 
+    const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v1'; // 新增：用來存密碼基準的 key
+
     let notificationPermission = "default";
     let blinkInterval = null; 
     const originalTitle = document.title;
 
+    // --- 初始化 ---
     window.onload = function() {
         renderBinaryGrid("00000000");
+        
+        // 1. 嘗試從紀錄中恢復密碼並自動推算
+        initDailyPassword();
+
+        // 2. 載入頁籤
         loadTabsFromStorage();
         
-        // 請求通知權限
-        // 注意：如果是在本機檔案 (file://) 開啟，瀏覽器通常不會記住權限，每次都會變成 default
+        // 3. 通知權限
         if ("Notification" in window) {
             notificationPermission = Notification.permission;
-            
             if (notificationPermission === "default") {
                 Notification.requestPermission().then(permission => {
                     notificationPermission = permission;
@@ -388,60 +413,110 @@
         }
     };
 
-    function stopTitleBlink() {
-        if (blinkInterval) {
-            clearInterval(blinkInterval);
-            blinkInterval = null;
-        }
-        document.title = originalTitle;
-    }
-
-    function startTitleBlink(text) {
-        stopTitleBlink();
-        let state = false;
-        blinkInterval = setInterval(() => {
-            document.title = state ? originalTitle : text;
-            state = !state;
-        }, 1000); 
-    }
-
-    function sendNotification(title, body) {
-        startTitleBlink("【時間到！】" + title);
-        // 再次確認權限
-        if (Notification.permission === "granted") {
-            const notification = new Notification(title, {
-                body: body,
-                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png" 
-            });
-            notification.onclick = function() {
-                window.focus();
-                notification.close();
-                stopTitleBlink();
-            };
-        } else {
-            setTimeout(() => alert(`${title}\n${body}`), 100);
-        }
-    }
-
-    window.onclick = function() {
-        stopTitleBlink();
-    };
-
     /* =========================================
-       每日密碼
+       [核心邏輯] 每日密碼：手動輸入 & 自動推算
        ========================================= */
-    function convertDecimalToBinary() {
-        const input = document.getElementById('decimalInput').value;
-        let binaryString = "00000000";
-        if (input !== "") {
-            const number = parseInt(input, 10);
-            if (!isNaN(number)) {
-                let rawBinary = number.toString(2);
-                let paddedBinary = rawBinary.padStart(8, '0');
-                binaryString = paddedBinary.slice(-8); 
-            }
+    
+    function initDailyPassword() {
+        const savedData = localStorage.getItem(STORAGE_KEY_PWD);
+        if (!savedData) {
+            // 如果沒有存檔，保持空白，等待使用者第一次輸入
+            return;
         }
-        renderBinaryGrid(binaryString);
+
+        try {
+            const { refDate, refValue } = JSON.parse(savedData);
+            
+            // 1. 計算相差天數
+            const storedDate = new Date(refDate);
+            storedDate.setHours(0, 0, 0, 0);
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const diffTime = today - storedDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) {
+                // 如果是同一天，直接顯示存的值
+                document.getElementById('decimalInput').value = refValue;
+            } else {
+                // 2. 如果跨日了，依照規則推算：每過一天 +5，超過 255 回到 5
+                const minVal = 5;
+                const maxVal = 255;
+                const step = 5;
+                const totalSteps = ((maxVal - minVal) / step) + 1; // 51階
+
+                // 算出基準值的 index
+                const refIndex = (refValue - minVal) / step;
+                
+                // 算出新的 index (循環)
+                let newIndex = (refIndex + diffDays) % totalSteps;
+                // 處理負數 (防止時間倒流計算錯誤)
+                if (newIndex < 0) newIndex += totalSteps;
+
+                // 還原成數值
+                const todayValue = (newIndex * step) + minVal;
+
+                // 更新欄位
+                document.getElementById('decimalInput').value = todayValue;
+            }
+            
+            // 觸發二進位顯示
+            renderBinaryFromInput();
+
+        } catch (e) {
+            console.error("讀取密碼紀錄失敗", e);
+            localStorage.removeItem(STORAGE_KEY_PWD);
+        }
+    }
+
+    function handlePasswordInput() {
+        const inputEl = document.getElementById('decimalInput');
+        const errorEl = document.getElementById('errorMsg');
+        const val = parseInt(inputEl.value, 10);
+
+        // 清除錯誤樣式
+        inputEl.classList.remove('invalid');
+        errorEl.innerText = "";
+
+        // 驗證規則：
+        // 1. 必須是數字
+        // 2. 5 ~ 255
+        // 3. 必須是 5 的倍數
+        if (isNaN(val)) {
+            renderBinaryGrid("00000000");
+            return;
+        }
+
+        if (val < 5 || val > 255 || val % 5 !== 0) {
+            inputEl.classList.add('invalid');
+            errorEl.innerText = "請輸入 5~255 之間且為 5 的倍數";
+            renderBinaryGrid("00000000"); // 清空顯示以示警告
+            return;
+        }
+
+        // --- 驗證通過：顯示二進位並存檔 ---
+        renderBinaryFromInput();
+
+        // 存檔邏輯：記錄「當下輸入的值」與「今天日期」
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const dataToSave = {
+            refDate: today.toISOString(), // 存成 ISO 字串
+            refValue: val
+        };
+        localStorage.setItem(STORAGE_KEY_PWD, JSON.stringify(dataToSave));
+    }
+
+    function renderBinaryFromInput() {
+        const val = parseInt(document.getElementById('decimalInput').value, 10);
+        if (!isNaN(val)) {
+            let rawBinary = val.toString(2);
+            let paddedBinary = rawBinary.padStart(8, '0');
+            renderBinaryGrid(paddedBinary.slice(-8));
+        }
     }
 
     function renderBinaryGrid(binStr) {
@@ -465,13 +540,54 @@
     }
 
     /* =========================================
+       標題閃爍與通知
+       ========================================= */
+    function stopTitleBlink() {
+        if (blinkInterval) {
+            clearInterval(blinkInterval);
+            blinkInterval = null;
+        }
+        document.title = originalTitle;
+    }
+
+    function startTitleBlink(text) {
+        stopTitleBlink();
+        let state = false;
+        blinkInterval = setInterval(() => {
+            document.title = state ? originalTitle : text;
+            state = !state;
+        }, 1000); 
+    }
+
+    function sendNotification(title, body) {
+        startTitleBlink("【時間到！】" + title);
+        if (Notification.permission === "granted") {
+            const notification = new Notification(title, {
+                body: body,
+                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png" 
+            });
+            notification.onclick = function() {
+                window.focus();
+                notification.close();
+                stopTitleBlink();
+            };
+        } else {
+            setTimeout(() => alert(`${title}\n${body}`), 100);
+        }
+    }
+
+    window.onclick = function() {
+        stopTitleBlink();
+    };
+
+    /* =========================================
        多頁籤系統
        ========================================= */
     let tabCounter = 0; 
     let tabs = []; 
 
     function loadTabsFromStorage() {
-        const savedData = localStorage.getItem(STORAGE_KEY);
+        const savedData = localStorage.getItem(STORAGE_KEY_TABS);
         if (savedData) {
             const parsedTabs = JSON.parse(savedData);
             if (parsedTabs.length > 0) {
@@ -489,7 +605,7 @@
 
     function saveTabsToStorage() {
         const dataToSave = tabs.map(t => ({ id: t.id, name: t.name }));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+        localStorage.setItem(STORAGE_KEY_TABS, JSON.stringify(dataToSave));
     }
 
     function addNewTab() {
@@ -526,7 +642,6 @@
         pane.className = 'tab-pane';
         pane.id = `tab-pane-${id}`;
         
-        // 修正：按鈕文字為 "全部重置"
         pane.innerHTML = `
             <div class="timer-display" id="timer-display-${id}">00:00</div>
             
