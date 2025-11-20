@@ -12,6 +12,7 @@
             --reset-color: #e74c3c;
             --sub-reset-color: #7f8c8d;
             --timeout-color: #c0392b; 
+            --success-color: #27ae60; /* 新增：成功儲存的綠色 */
             --box-border: #bdc3c7;
             --tab-active: #fff;
             --tab-inactive: #e0e0e0;
@@ -65,6 +66,23 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
             font-size: 1.5rem;
+            display: flex;           /* 新增：為了讓提示文字並排 */
+            justify-content: center; /* 新增：置中 */
+            align-items: center;     /* 新增：垂直對齊 */
+            gap: 10px;               /* 新增：標題與提示的間距 */
+        }
+
+        /* --- 新增：儲存提示訊息樣式 --- */
+        .save-msg {
+            font-size: 0.9rem;
+            color: var(--success-color);
+            font-weight: normal;
+            opacity: 0; /* 預設隱藏 */
+            transition: opacity 0.5s ease; /* 淡入淡出效果 */
+        }
+        
+        .save-msg.show {
+            opacity: 1; /* 顯示 */
         }
 
         /* --- 每日密碼 --- */
@@ -86,7 +104,6 @@
             color: #2c3e50;
         }
         
-        /* 輸入錯誤時顯示紅框 */
         input[type="number"].invalid {
             border-color: #e74c3c;
             background-color: #fdecec;
@@ -95,7 +112,7 @@
         .error-msg {
             color: #e74c3c;
             font-size: 12px;
-            height: 15px; /* 固定高度避免跳動 */
+            height: 15px;
             margin-top: -10px;
         }
 
@@ -360,14 +377,18 @@
 
     <!-- 上半部：每日密碼 -->
     <div class="container">
-        <h2>每日密碼</h2>
+        <!-- 在標題旁加入提示文字 span -->
+        <h2>每日密碼 <span id="saveMsg" class="save-msg">(已記錄當下密碼)</span></h2>
+        
         <div class="input-group">
             <!-- 
-                設定 min, max, step 輔助使用者輸入 
-                oninput: 每次輸入時觸發驗證與存檔
+                oninput: 打字時，只更新畫面與檢查錯誤 (不存檔)
+                onblur: 失去焦點時，才執行存檔與提示
             -->
-            <input type="number" id="decimalInput" placeholder="請輸入5的倍數 (例如 160)" min="5" max="255" step="5" oninput="handlePasswordInput()">
-            <div id="errorMsg" class="error-msg"></div> <!-- 錯誤訊息顯示區 -->
+            <input type="number" id="decimalInput" placeholder="請輸入5的倍數 (例如 160)" min="5" max="255" step="5" 
+                   oninput="handleInputVisual()" 
+                   onblur="handleInputSave()">
+            <div id="errorMsg" class="error-msg"></div>
             <div id="binaryContainer" class="binary-container"></div>
         </div>
     </div>
@@ -386,23 +407,19 @@
 
 <script>
     const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v6'; 
-    const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v1'; // 新增：用來存密碼基準的 key
+    const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v1';
 
     let notificationPermission = "default";
     let blinkInterval = null; 
+    let saveMsgTimeout = null; // 控制提示文字消失的計時器
     const originalTitle = document.title;
 
     // --- 初始化 ---
     window.onload = function() {
         renderBinaryGrid("00000000");
-        
-        // 1. 嘗試從紀錄中恢復密碼並自動推算
         initDailyPassword();
-
-        // 2. 載入頁籤
         loadTabsFromStorage();
         
-        // 3. 通知權限
         if ("Notification" in window) {
             notificationPermission = Notification.permission;
             if (notificationPermission === "default") {
@@ -414,23 +431,18 @@
     };
 
     /* =========================================
-       [核心邏輯] 每日密碼：手動輸入 & 自動推算
+       [核心邏輯] 每日密碼
        ========================================= */
     
     function initDailyPassword() {
         const savedData = localStorage.getItem(STORAGE_KEY_PWD);
-        if (!savedData) {
-            // 如果沒有存檔，保持空白，等待使用者第一次輸入
-            return;
-        }
+        if (!savedData) return;
 
         try {
             const { refDate, refValue } = JSON.parse(savedData);
             
-            // 1. 計算相差天數
             const storedDate = new Date(refDate);
             storedDate.setHours(0, 0, 0, 0);
-            
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
@@ -438,40 +450,28 @@
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
             if (diffDays === 0) {
-                // 如果是同一天，直接顯示存的值
                 document.getElementById('decimalInput').value = refValue;
             } else {
-                // 2. 如果跨日了，依照規則推算：每過一天 +5，超過 255 回到 5
                 const minVal = 5;
                 const maxVal = 255;
                 const step = 5;
-                const totalSteps = ((maxVal - minVal) / step) + 1; // 51階
-
-                // 算出基準值的 index
+                const totalSteps = ((maxVal - minVal) / step) + 1;
                 const refIndex = (refValue - minVal) / step;
-                
-                // 算出新的 index (循環)
                 let newIndex = (refIndex + diffDays) % totalSteps;
-                // 處理負數 (防止時間倒流計算錯誤)
                 if (newIndex < 0) newIndex += totalSteps;
-
-                // 還原成數值
                 const todayValue = (newIndex * step) + minVal;
-
-                // 更新欄位
                 document.getElementById('decimalInput').value = todayValue;
             }
             
-            // 觸發二進位顯示
             renderBinaryFromInput();
-
         } catch (e) {
             console.error("讀取密碼紀錄失敗", e);
             localStorage.removeItem(STORAGE_KEY_PWD);
         }
     }
 
-    function handlePasswordInput() {
+    // 1. 輸入時：只做視覺檢查與更新 (不存檔)
+    function handleInputVisual() {
         const inputEl = document.getElementById('decimalInput');
         const errorEl = document.getElementById('errorMsg');
         const val = parseInt(inputEl.value, 10);
@@ -480,34 +480,63 @@
         inputEl.classList.remove('invalid');
         errorEl.innerText = "";
 
-        // 驗證規則：
-        // 1. 必須是數字
-        // 2. 5 ~ 255
-        // 3. 必須是 5 的倍數
         if (isNaN(val)) {
             renderBinaryGrid("00000000");
             return;
         }
 
+        // 錯誤檢查
         if (val < 5 || val > 255 || val % 5 !== 0) {
             inputEl.classList.add('invalid');
             errorEl.innerText = "請輸入 5~255 之間且為 5 的倍數";
-            renderBinaryGrid("00000000"); // 清空顯示以示警告
+            renderBinaryGrid("00000000");
             return;
         }
 
-        // --- 驗證通過：顯示二進位並存檔 ---
+        // 更新二進位顯示
         renderBinaryFromInput();
+    }
 
-        // 存檔邏輯：記錄「當下輸入的值」與「今天日期」
+    // 2. 失去焦點 (Blur) 時：再次檢查有效性 -> 存檔 -> 顯示提示
+    function handleInputSave() {
+        const inputEl = document.getElementById('decimalInput');
+        const val = parseInt(inputEl.value, 10);
+
+        // 如果有無效數值或格式錯誤，不執行存檔
+        if (isNaN(val) || val < 5 || val > 255 || val % 5 !== 0) {
+            return;
+        }
+
+        // --- 存檔邏輯 ---
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
         const dataToSave = {
-            refDate: today.toISOString(), // 存成 ISO 字串
+            refDate: today.toISOString(),
             refValue: val
         };
         localStorage.setItem(STORAGE_KEY_PWD, JSON.stringify(dataToSave));
+
+        // --- 顯示「已記錄」提示 ---
+        showSaveMessage();
+    }
+
+    // 顯示提示文字並在3秒後消失
+    function showSaveMessage() {
+        const msgEl = document.getElementById('saveMsg');
+        
+        // 如果之前還有倒數，先清除
+        if (saveMsgTimeout) {
+            clearTimeout(saveMsgTimeout);
+        }
+
+        // 顯示
+        msgEl.classList.add('show');
+
+        // 3秒後隱藏
+        saveMsgTimeout = setTimeout(() => {
+            msgEl.classList.remove('show');
+        }, 3000);
     }
 
     function renderBinaryFromInput() {
