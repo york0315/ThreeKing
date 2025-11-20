@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日三王計時器</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f5f5;
+            --disabled-color: #e0e0e0;
+            --reset-color: #e74c3c;
+            --sub-reset-color: #7f8c8d;
+            --timeout-color: #c0392b; 
+            --box-border: #bdc3c7;
+            --tab-active: #fff;
+            --tab-inactive: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .main-wrapper {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .container.timer-section {
+            padding: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        h2 {
+            color: #333;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        /* --- 每日密碼 --- */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 80%;
+            text-align: center;
+        }
+
+        .binary-container {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bit-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 35px;
+        }
+
+        .bit-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        .bit-value {
+            width: 35px;
+            height: 45px;
+            line-height: 45px;
+            border: 2px solid var(--box-border);
+            border-radius: 5px;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: white;
+            color: var(--primary-color);
+            transition: all 0.3s;
+        }
+        
+        .bit-value.active {
+            border-color: var(--primary-color);
+            background-color: #ebf5ff;
+        }
+
+        /* --- 分頁籤 --- */
+        .tabs-header {
+            display: flex;
+            overflow-x: auto;
+            background: #ddd;
+            border-radius: 10px 10px 0 0;
+            padding: 5px 5px 0 5px;
+            gap: 5px;
+        }
+
+        .tab-btn {
+            padding: 10px 15px;
+            background: var(--tab-inactive);
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 80px;
+            justify-content: space-between;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+        }
+
+        .tab-close {
+            font-size: 12px;
+            color: #999;
+            padding: 2px 6px;
+            border-radius: 50%;
+        }
+
+        .tab-close:hover {
+            background: #ffcccc;
+            color: #d00;
+        }
+
+        .add-tab-btn {
+            padding: 5px 15px;
+            font-size: 20px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+        
+        .tab-content-wrapper {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tab-pane {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- 計時器與按鈕 --- */
+        .timer-display {
+            font-size: 3.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 15px 0;
+            color: #333;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .controls-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .btn-column {
+            display: flex;
+            flex-direction: column;
+            width: 32%;
+            gap: 10px;
+        }
+
+        .timer-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: var(--primary-color);
+            color: white;
+            width: 100%;
+            height: 70px; 
+        }
+
+        .timer-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .timer-btn:disabled {
+            background-color: var(--disabled-color);
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.8;
+        }
+        
+        .timer-btn.btn-timeout {
+            background-color: var(--timeout-color) !important;
+            color: white !important;
+            font-size: 2rem;
+            font-weight: 900;
+            opacity: 1 !important;
+            cursor: not-allowed;
+        }
+
+        .btn-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .btn-subtitle {
+            font-size: 0.8rem;
+            font-weight: normal;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        /* --- 個別重置按鈕 --- */
+        .btn-sub-reset {
+            background-color: white;
+            border: 1px solid var(--sub-reset-color);
+            color: var(--sub-reset-color);
+            padding: 5px 0;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-sub-reset:hover:not(:disabled) {
+            background-color: var(--sub-reset-color);
+            color: white;
+        }
+
+        .btn-sub-reset:disabled {
+            border-color: #e0e0e0;
+            color: #ccc;
+            background-color: transparent;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* --- 全部重置 按鈕 --- */
+        .btn-reset {
+            background-color: var(--reset-color);
+            color: white;
+            border: none;
+            padding: 8px 20px; 
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            align-self: flex-end; 
+            width: auto;          
+            margin-top: 20px;
+        }
+
+        .btn-reset:hover {
+            background-color: #c0392b;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+<h1>每日三王計時器</h1>
+
+<div class="main-wrapper">
+
+    <!-- 上半部：每日密碼 -->
+    <div class="container">
+        <h2>每日密碼</h2>
+        <div class="input-group">
+            <input type="number" id="decimalInput" placeholder="輸入數字 (0-255)" oninput="convertDecimalToBinary()">
+            <div id="binaryContainer" class="binary-container"></div>
+        </div>
+    </div>
+
+    <!-- 下半部：多頁籤計時器 -->
+    <div class="container timer-section">
+        <div class="tabs-header" id="tabsHeader">
+            <button class="add-tab-btn" onclick="addNewTab()">+</button>
+        </div>
+        <div class="tab-content-wrapper" id="tabsContent">
+            <!-- JS 動態內容 -->
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 版本更新到 v6
+    const STORAGE_KEY = 'dailyKingTimerTabs_v6'; 
+    let notificationPermission = "default";
+    let blinkInterval = null; 
+    const originalTitle = document.title;
+
+    window.onload = function() {
+        renderBinaryGrid("00000000");
+        loadTabsFromStorage();
+        
+        // 請求通知權限
+        // 注意：如果是在本機檔案 (file://) 開啟，瀏覽器通常不會記住權限，每次都會變成 default
+        if ("Notification" in window) {
+            notificationPermission = Notification.permission;
+            
+            if (notificationPermission === "default") {
+                Notification.requestPermission().then(permission => {
+                    notificationPermission = permission;
+                });
+            }
+        }
+    };
+
+    function stopTitleBlink() {
+        if (blinkInterval) {
+            clearInterval(blinkInterval);
+            blinkInterval = null;
+        }
+        document.title = originalTitle;
+    }
+
+    function startTitleBlink(text) {
+        stopTitleBlink();
+        let state = false;
+        blinkInterval = setInterval(() => {
+            document.title = state ? originalTitle : text;
+            state = !state;
+        }, 1000); 
+    }
+
+    function sendNotification(title, body) {
+        startTitleBlink("【時間到！】" + title);
+        // 再次確認權限
+        if (Notification.permission === "granted") {
+            const notification = new Notification(title, {
+                body: body,
+                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png" 
+            });
+            notification.onclick = function() {
+                window.focus();
+                notification.close();
+                stopTitleBlink();
+            };
+        } else {
+            setTimeout(() => alert(`${title}\n${body}`), 100);
+        }
+    }
+
+    window.onclick = function() {
+        stopTitleBlink();
+    };
+
+    /* =========================================
+       每日密碼
+       ========================================= */
+    function convertDecimalToBinary() {
+        const input = document.getElementById('decimalInput').value;
+        let binaryString = "00000000";
+        if (input !== "") {
+            const number = parseInt(input, 10);
+            if (!isNaN(number)) {
+                let rawBinary = number.toString(2);
+                let paddedBinary = rawBinary.padStart(8, '0');
+                binaryString = paddedBinary.slice(-8); 
+            }
+        }
+        renderBinaryGrid(binaryString);
+    }
+
+    function renderBinaryGrid(binStr) {
+        const container = document.getElementById('binaryContainer');
+        container.innerHTML = ''; 
+        for (let i = 0; i < 8; i++) {
+            const bitValue = binStr[i]; 
+            const boxWrapper = document.createElement('div');
+            boxWrapper.className = 'bit-box';
+            const label = document.createElement('div');
+            label.className = 'bit-label';
+            label.innerText = (i + 1); 
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'bit-value';
+            valueDiv.innerText = bitValue;
+            if (bitValue === '1') valueDiv.classList.add('active');
+            boxWrapper.appendChild(label);
+            boxWrapper.appendChild(valueDiv);
+            container.appendChild(boxWrapper);
+        }
+    }
+
+    /* =========================================
+       多頁籤系統
+       ========================================= */
+    let tabCounter = 0; 
+    let tabs = []; 
+
+    function loadTabsFromStorage() {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (savedData) {
+            const parsedTabs = JSON.parse(savedData);
+            if (parsedTabs.length > 0) {
+                const maxId = Math.max(...parsedTabs.map(t => t.id));
+                tabCounter = maxId;
+                parsedTabs.forEach(t => createTab(t.id, t.name));
+                switchTab(parsedTabs[0].id);
+            } else {
+                addNewTab();
+            }
+        } else {
+            addNewTab();
+        }
+    }
+
+    function saveTabsToStorage() {
+        const dataToSave = tabs.map(t => ({ id: t.id, name: t.name }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    }
+
+    function addNewTab() {
+        tabCounter++;
+        createTab(tabCounter, `角色 ${tabCounter}`);
+        saveTabsToStorage();
+        switchTab(tabCounter);
+    }
+
+    function createTab(id, name) {
+        const newTab = {
+            id: id,
+            name: name,
+            interval: null,
+            remainingTime: 0
+        };
+        tabs.push(newTab);
+
+        const headerContainer = document.getElementById('tabsHeader');
+        const addBtn = headerContainer.querySelector('.add-tab-btn');
+        const tabBtn = document.createElement('div');
+        tabBtn.className = 'tab-btn';
+        tabBtn.id = `tab-btn-${id}`;
+        tabBtn.onclick = (e) => {
+            if(e.target.classList.contains('tab-close')) return;
+            switchTab(id);
+        };
+        tabBtn.ondblclick = () => renameTab(id);
+        tabBtn.innerHTML = `<span id="tab-name-${id}">${name}</span><span class="tab-close" onclick="removeTab(${id})">✕</span>`;
+        headerContainer.insertBefore(tabBtn, addBtn);
+
+        const contentContainer = document.getElementById('tabsContent');
+        const pane = document.createElement('div');
+        pane.className = 'tab-pane';
+        pane.id = `tab-pane-${id}`;
+        
+        // 修正：按鈕文字為 "全部重置"
+        pane.innerHTML = `
+            <div class="timer-display" id="timer-display-${id}">00:00</div>
+            
+            <div class="controls-wrapper">
+                <div class="btn-group">
+                    <!-- 1王 -->
+                    <div class="btn-column">
+                        <button class="timer-btn" id="btn1-${id}" onclick="startTabTimer(${id}, 160, 1)">
+                            <span class="btn-title">1王</span>
+                            <span class="btn-subtitle">(2分40秒)</span>
+                        </button>
+                        <button class="btn-sub-reset" id="sub-reset-btn1-${id}" onclick="individualReset(${id}, 1)" disabled>重置</button>
+                    </div>
+                    
+                    <!-- 2王 -->
+                    <div class="btn-column">
+                        <button class="timer-btn" id="btn2-${id}" onclick="startTabTimer(${id}, 80, 2)" disabled>
+                            <span class="btn-title">2王</span>
+                            <span class="btn-subtitle">(1分20秒)</span>
+                        </button>
+                        <button class="btn-sub-reset" id="sub-reset-btn2-${id}" onclick="individualReset(${id}, 2)" disabled>重置</button>
+                    </div>
+                    
+                    <!-- 3王 -->
+                    <div class="btn-column">
+                        <button class="timer-btn" id="btn3-${id}" onclick="startTabTimer(${id}, 160, 3)" disabled>
+                            <span class="btn-title">3王</span>
+                            <span class="btn-subtitle">(2分40秒)</span>
+                        </button>
+                        <button class="btn-sub-reset" id="sub-reset-btn3-${id}" onclick="individualReset(${id}, 3)" disabled>重置</button>
+                    </div>
+                </div>
+
+                <!-- 全部重置按鈕 -->
+                <button class="btn-reset" onclick="resetTabTimer(${id})">全部重置</button>
+            </div>
+        `;
+        contentContainer.appendChild(pane);
+    }
+
+    function switchTab(id) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        const btn = document.getElementById(`tab-btn-${id}`);
+        const pane = document.getElementById(`tab-pane-${id}`);
+        if(btn && pane) {
+            btn.classList.add('active');
+            pane.classList.add('active');
+        }
+    }
+
+    function removeTab(id) {
+        if(!confirm('確定要刪除這個分頁嗎？')) return;
+        const targetTab = tabs.find(t => t.id === id);
+        if(targetTab && targetTab.interval) clearInterval(targetTab.interval);
+        document.getElementById(`tab-btn-${id}`).remove();
+        document.getElementById(`tab-pane-${id}`).remove();
+        tabs = tabs.filter(t => t.id !== id);
+        saveTabsToStorage();
+        if (tabs.length > 0) switchTab(tabs[tabs.length - 1].id);
+        else addNewTab();
+    }
+
+    function renameTab(id) {
+        const tabData = tabs.find(t => t.id === id);
+        if(!tabData) return;
+        const newName = prompt("請輸入新的標籤名稱：", tabData.name);
+        if(newName && newName.trim() !== "") {
+            tabData.name = newName;
+            document.getElementById(`tab-name-${id}`).innerText = newName;
+            saveTabsToStorage();
+        }
+    }
+
+    /* =========================================
+       計時與邏輯控制
+       ========================================= */
+
+    function markButtonAsFinished(btnElement) {
+        if (!btnElement) return;
+        btnElement.classList.add('btn-timeout');
+        btnElement.innerHTML = 'X';
+        
+        const resetBtn = btnElement.parentNode.querySelector('.btn-sub-reset');
+        if(resetBtn) {
+            resetBtn.disabled = false;
+        }
+    }
+
+    function restoreButtonState(btnElement, title, subtitle) {
+        if (!btnElement) return;
+        btnElement.classList.remove('btn-timeout');
+        btnElement.innerHTML = `<span class="btn-title">${title}</span><span class="btn-subtitle">${subtitle}</span>`;
+    }
+
+    function startTabTimer(tabId, seconds, btnStep) {
+        const tabData = tabs.find(t => t.id === tabId);
+        if (!tabData) return;
+
+        const btn1 = document.getElementById(`btn1-${tabId}`);
+        const btn2 = document.getElementById(`btn2-${tabId}`);
+        const btn3 = document.getElementById(`btn3-${tabId}`);
+        const display = document.getElementById(`timer-display-${tabId}`);
+
+        if (btnStep === 2 && btn2.disabled) return;
+        if (btnStep === 3 && btn3.disabled) return;
+
+        if(tabData.interval) clearInterval(tabData.interval);
+
+        document.getElementById(`sub-reset-btn${btnStep}-${tabId}`).disabled = false;
+
+        if (btnStep === 1) {
+            btn1.disabled = true;
+            btn2.disabled = false;
+        } else if (btnStep === 2) {
+            markButtonAsFinished(btn1); 
+            btn2.disabled = true;
+            btn3.disabled = false;
+        } else if (btnStep === 3) {
+            markButtonAsFinished(btn1); 
+            markButtonAsFinished(btn2); 
+            btn3.disabled = true;
+        }
+
+        tabData.remainingTime = seconds;
+        updateDisplay(display, tabData.remainingTime);
+
+        tabData.interval = setInterval(() => {
+            tabData.remainingTime--;
+            if (tabData.remainingTime >= 0) {
+                updateDisplay(display, tabData.remainingTime);
+            } else {
+                clearInterval(tabData.interval);
+                tabData.interval = null;
+                
+                const currentBtn = document.getElementById(`btn${btnStep}-${tabId}`);
+                markButtonAsFinished(currentBtn);
+
+                sendNotification(`[${tabData.name}] 計時結束`, `${btnStep}王 時間到了！`);
+            }
+        }, 1000);
+    }
+
+    function individualReset(tabId, btnStep) {
+        const tabData = tabs.find(t => t.id === tabId);
+        if (!tabData) return;
+
+        if(tabData.interval) clearInterval(tabData.interval);
+        tabData.interval = null;
+        document.getElementById(`timer-display-${tabId}`).innerText = "00:00";
+
+        const btn1 = document.getElementById(`btn1-${tabId}`);
+        const btn2 = document.getElementById(`btn2-${tabId}`);
+        const btn3 = document.getElementById(`btn3-${tabId}`);
+
+        const currentResetBtn = document.getElementById(`sub-reset-btn${btnStep}-${tabId}`);
+        if(currentResetBtn) currentResetBtn.disabled = true;
+
+        if (btnStep === 1) {
+            restoreButtonState(btn1, "1王", "(2分40秒)");
+            btn1.disabled = false;
+
+            restoreButtonState(btn2, "2王", "(1分20秒)");
+            btn2.disabled = true;
+            document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
+
+            restoreButtonState(btn3, "3王", "(2分40秒)");
+            btn3.disabled = true;
+            document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
+
+        } else if (btnStep === 2) {
+            restoreButtonState(btn2, "2王", "(1分20秒)");
+            btn2.disabled = false;
+
+            restoreButtonState(btn3, "3王", "(2分40秒)");
+            btn3.disabled = true;
+            document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
+
+        } else if (btnStep === 3) {
+            restoreButtonState(btn3, "3王", "(2分40秒)");
+            btn3.disabled = false; 
+        }
+    }
+
+    function resetTabTimer(tabId) {
+        const tabData = tabs.find(t => t.id === tabId);
+        if (!tabData) return;
+
+        if(tabData.interval) clearInterval(tabData.interval);
+        tabData.interval = null;
+        tabData.remainingTime = 0;
+        document.getElementById(`timer-display-${tabId}`).innerText = "00:00";
+
+        const btn1 = document.getElementById(`btn1-${tabId}`);
+        const btn2 = document.getElementById(`btn2-${tabId}`);
+        const btn3 = document.getElementById(`btn3-${tabId}`);
+
+        restoreButtonState(btn1, "1王", "(2分40秒)");
+        btn1.disabled = false;
+
+        restoreButtonState(btn2, "2王", "(1分20秒)");
+        btn2.disabled = true;
+
+        restoreButtonState(btn3, "3王", "(2分40秒)");
+        btn3.disabled = true;
+
+        document.getElementById(`sub-reset-btn1-${tabId}`).disabled = true;
+        document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
+        document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
+        
+        stopTitleBlink();
+    }
+
+    function updateDisplay(element, seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        element.innerText = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+</script>
+
+</body>
+</html>
