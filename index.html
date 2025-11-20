@@ -13,7 +13,7 @@
             --sub-reset-color: #7f8c8d;
             --timeout-color: #c0392b; 
             --success-color: #27ae60; 
-            --info-gray: #95a5a6; /* 新增：提示文字的灰色 */
+            --info-gray: #95a5a6; 
             --box-border: #bdc3c7;
             --tab-active: #fff;
             --tab-inactive: #e0e0e0;
@@ -64,25 +64,42 @@
         h2 {
             color: #333;
             border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 5px; /* 縮小標題下方的間距，讓提示文字靠近 */
-            margin-bottom: 5px;  /* 縮小間距 */
+            padding-bottom: 5px; 
+            margin-bottom: 5px;  
             font-size: 1.5rem;
+            display: flex;           
+            justify-content: center; 
+            align-items: center;     
+            gap: 10px;               
         }
 
-        /* --- 修改：儲存提示訊息樣式 (灰色小字、置於下方) --- */
+        /* 每日密碼的儲存提示 */
         .save-msg {
-            font-size: 0.85rem;        /* 小字 */
-            color: var(--info-gray);   /* 灰色 */
+            font-size: 0.85rem;        
+            color: var(--info-gray);   
             font-weight: normal;
-            height: 20px;              /* 固定高度，避免文字出現時版面跳動 */
-            margin-bottom: 15px;       /* 與下方輸入框的距離 */
-            opacity: 0;                /* 預設隱藏 */
+            height: 20px;              
+            margin-bottom: 15px;       
+            opacity: 0;                
             transition: opacity 0.5s ease; 
         }
-        
-        .save-msg.show {
-            opacity: 1; 
+        .save-msg.show { opacity: 1; }
+
+        /* --- 新增：分頁(TAG)儲存提示樣式 --- */
+        .tab-save-msg {
+            font-size: 0.85rem;
+            color: var(--info-gray);
+            font-weight: normal;
+            height: 20px;
+            margin-top: 5px; /* 與全部重置按鈕的距離 */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            align-self: flex-end; /* 靠右對齊 (對齊按鈕) */
+            width: auto;
+            text-align: right;
+            padding-right: 5px;
         }
+        .tab-save-msg.show { opacity: 1; }
 
         /* --- 每日密碼 --- */
         .input-group {
@@ -377,7 +394,6 @@
     <!-- 上半部：每日密碼 -->
     <div class="container">
         <h2>每日密碼</h2>
-        <!-- 將提示文字移到這裡 (標題下方)，並改為灰色小字 -->
         <div id="saveMsg" class="save-msg">(已記錄當下密碼)</div>
         
         <div class="input-group">
@@ -402,8 +418,8 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v6'; 
-    const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2'; // 更新 Key 以確保新版本運作順暢
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v7'; // 升級版本
+    const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
 
     let notificationPermission = "default";
     let blinkInterval = null; 
@@ -621,11 +637,31 @@
         localStorage.setItem(STORAGE_KEY_TABS, JSON.stringify(dataToSave));
     }
 
+    // 新增：顯示分頁儲存提示 (會找到當前 active 的分頁並顯示)
+    function showTabSaveFeedback() {
+        const activePane = document.querySelector('.tab-pane.active');
+        if (!activePane) return;
+
+        const msgEl = activePane.querySelector('.tab-save-msg');
+        if (!msgEl) return;
+
+        // 如果有舊的 timeout 先清除，避免閃爍
+        if (msgEl.hideTimeout) clearTimeout(msgEl.hideTimeout);
+
+        msgEl.classList.add('show');
+
+        msgEl.hideTimeout = setTimeout(() => {
+            msgEl.classList.remove('show');
+            msgEl.hideTimeout = null;
+        }, 3000);
+    }
+
     function addNewTab() {
         tabCounter++;
         createTab(tabCounter, `角色 ${tabCounter}`);
         saveTabsToStorage();
         switchTab(tabCounter);
+        showTabSaveFeedback(); // 顯示提示
     }
 
     function createTab(id, name) {
@@ -655,6 +691,7 @@
         pane.className = 'tab-pane';
         pane.id = `tab-pane-${id}`;
         
+        // 新增：全部重置按鈕下方加入了 tab-save-msg
         pane.innerHTML = `
             <div class="timer-display" id="timer-display-${id}">00:00</div>
             
@@ -690,6 +727,8 @@
 
                 <!-- 全部重置按鈕 -->
                 <button class="btn-reset" onclick="resetTabTimer(${id})">全部重置</button>
+                <!-- 儲存提示文字 -->
+                <div id="tab-save-msg-${id}" class="tab-save-msg">(已儲存)</div>
             </div>
         `;
         contentContainer.appendChild(pane);
@@ -716,6 +755,8 @@
         saveTabsToStorage();
         if (tabs.length > 0) switchTab(tabs[tabs.length - 1].id);
         else addNewTab();
+        
+        showTabSaveFeedback(); // 顯示提示 (在刪除後切換到的分頁上顯示)
     }
 
     function renameTab(id) {
@@ -726,6 +767,7 @@
             tabData.name = newName;
             document.getElementById(`tab-name-${id}`).innerText = newName;
             saveTabsToStorage();
+            showTabSaveFeedback(); // 顯示提示
         }
     }
 
