@@ -12,7 +12,8 @@
             --reset-color: #e74c3c;
             --sub-reset-color: #7f8c8d;
             --timeout-color: #c0392b; 
-            --success-color: #27ae60; /* 新增：成功儲存的綠色 */
+            --success-color: #27ae60; 
+            --info-gray: #95a5a6; /* 新增：提示文字的灰色 */
             --box-border: #bdc3c7;
             --tab-active: #fff;
             --tab-inactive: #e0e0e0;
@@ -63,26 +64,24 @@
         h2 {
             color: #333;
             border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            padding-bottom: 5px; /* 縮小標題下方的間距，讓提示文字靠近 */
+            margin-bottom: 5px;  /* 縮小間距 */
             font-size: 1.5rem;
-            display: flex;           /* 新增：為了讓提示文字並排 */
-            justify-content: center; /* 新增：置中 */
-            align-items: center;     /* 新增：垂直對齊 */
-            gap: 10px;               /* 新增：標題與提示的間距 */
         }
 
-        /* --- 新增：儲存提示訊息樣式 --- */
+        /* --- 修改：儲存提示訊息樣式 (灰色小字、置於下方) --- */
         .save-msg {
-            font-size: 0.9rem;
-            color: var(--success-color);
+            font-size: 0.85rem;        /* 小字 */
+            color: var(--info-gray);   /* 灰色 */
             font-weight: normal;
-            opacity: 0; /* 預設隱藏 */
-            transition: opacity 0.5s ease; /* 淡入淡出效果 */
+            height: 20px;              /* 固定高度，避免文字出現時版面跳動 */
+            margin-bottom: 15px;       /* 與下方輸入框的距離 */
+            opacity: 0;                /* 預設隱藏 */
+            transition: opacity 0.5s ease; 
         }
         
         .save-msg.show {
-            opacity: 1; /* 顯示 */
+            opacity: 1; 
         }
 
         /* --- 每日密碼 --- */
@@ -377,14 +376,11 @@
 
     <!-- 上半部：每日密碼 -->
     <div class="container">
-        <!-- 在標題旁加入提示文字 span -->
-        <h2>每日密碼 <span id="saveMsg" class="save-msg">(已記錄當下密碼)</span></h2>
+        <h2>每日密碼</h2>
+        <!-- 將提示文字移到這裡 (標題下方)，並改為灰色小字 -->
+        <div id="saveMsg" class="save-msg">(已記錄當下密碼)</div>
         
         <div class="input-group">
-            <!-- 
-                oninput: 打字時，只更新畫面與檢查錯誤 (不存檔)
-                onblur: 失去焦點時，才執行存檔與提示
-            -->
             <input type="number" id="decimalInput" placeholder="請輸入5的倍數 (例如 160)" min="5" max="255" step="5" 
                    oninput="handleInputVisual()" 
                    onblur="handleInputSave()">
@@ -407,11 +403,11 @@
 
 <script>
     const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v6'; 
-    const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v1';
+    const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2'; // 更新 Key 以確保新版本運作順暢
 
     let notificationPermission = "default";
     let blinkInterval = null; 
-    let saveMsgTimeout = null; // 控制提示文字消失的計時器
+    let saveMsgTimeout = null; 
     const originalTitle = document.title;
 
     // --- 初始化 ---
@@ -470,13 +466,11 @@
         }
     }
 
-    // 1. 輸入時：只做視覺檢查與更新 (不存檔)
     function handleInputVisual() {
         const inputEl = document.getElementById('decimalInput');
         const errorEl = document.getElementById('errorMsg');
         const val = parseInt(inputEl.value, 10);
 
-        // 清除錯誤樣式
         inputEl.classList.remove('invalid');
         errorEl.innerText = "";
 
@@ -485,7 +479,6 @@
             return;
         }
 
-        // 錯誤檢查
         if (val < 5 || val > 255 || val % 5 !== 0) {
             inputEl.classList.add('invalid');
             errorEl.innerText = "請輸入 5~255 之間且為 5 的倍數";
@@ -493,21 +486,17 @@
             return;
         }
 
-        // 更新二進位顯示
         renderBinaryFromInput();
     }
 
-    // 2. 失去焦點 (Blur) 時：再次檢查有效性 -> 存檔 -> 顯示提示
     function handleInputSave() {
         const inputEl = document.getElementById('decimalInput');
         const val = parseInt(inputEl.value, 10);
 
-        // 如果有無效數值或格式錯誤，不執行存檔
         if (isNaN(val) || val < 5 || val > 255 || val % 5 !== 0) {
             return;
         }
 
-        // --- 存檔邏輯 ---
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -517,23 +506,18 @@
         };
         localStorage.setItem(STORAGE_KEY_PWD, JSON.stringify(dataToSave));
 
-        // --- 顯示「已記錄」提示 ---
         showSaveMessage();
     }
 
-    // 顯示提示文字並在3秒後消失
     function showSaveMessage() {
         const msgEl = document.getElementById('saveMsg');
         
-        // 如果之前還有倒數，先清除
         if (saveMsgTimeout) {
             clearTimeout(saveMsgTimeout);
         }
 
-        // 顯示
         msgEl.classList.add('show');
 
-        // 3秒後隱藏
         saveMsgTimeout = setTimeout(() => {
             msgEl.classList.remove('show');
         }, 3000);
