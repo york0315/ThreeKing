@@ -45,90 +45,53 @@
             align-items: center;
             gap: 15px;
         }
-        h1 img {
-            width: 50px;
-            height: 50px;
-        }
+        h1 img { width: 50px; height: 50px; }
 
-        .main-wrapper {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+        .main-wrapper { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 20px; }
 
         .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            box-sizing: border-box;
-            text-align: center;
+            background: white; padding: 2rem; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; text-align: center;
         }
-
-        .container.timer-section {
-            padding: 0;
-            background: transparent;
-            box-shadow: none;
-        }
+        .container.timer-section { padding: 0; background: transparent; box-shadow: none; }
 
         h2 {
-            color: #333;
-            border-bottom: none; 
-            padding-bottom: 5px; 
-            margin-bottom: 5px;  
-            font-size: 1.5rem;
-            display: flex;           
-            justify-content: center; 
-            align-items: center;     
-            gap: 10px;               
+            color: #333; border-bottom: none; padding-bottom: 5px; margin-bottom: 5px;
+            font-size: 1.5rem; display: flex; justify-content: center; align-items: center; gap: 10px;
         }
-        
-        h2.with-border {
-            border-bottom: 2px solid var(--secondary-color);
-        }
+        h2.with-border { border-bottom: 2px solid var(--secondary-color); }
 
-        /* --- 全域漂浮通知 (Toast) --- */
+        /* --- Toast --- */
         #toast-notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--toast-bg);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 50px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            font-size: 0.9rem;
-            z-index: 9999;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s, transform 0.3s;
-            pointer-events: none; /* 避免擋到點擊 */
+            position: fixed; bottom: 20px; right: 20px; background-color: var(--toast-bg); color: white;
+            padding: 10px 20px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 0.9rem;
+            z-index: 9999; opacity: 0; transform: translateY(20px); transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
         }
-        #toast-notification.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        #toast-notification.show { opacity: 1; transform: translateY(0); }
 
-        /* --- 輸入框 --- */
-        .input-group {
-            display: flex; flex-direction: column; gap: 15px; align-items: center;
-        }
-        input[type="number"] {
+        /* --- 輸入框樣式修正 (v23) --- */
+        .input-group { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+
+        /* 修正：只針對每日密碼的大輸入框設定寬度 */
+        #decimalInput {
             padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px;
             text-align: center; font-weight: bold; color: #2c3e50;
-            width: 315px; 
-            max-width: 100%;
-            box-sizing: border-box;
+            width: 315px; max-width: 100%; box-sizing: border-box;
         }
-        input[type="number"].invalid { border-color: #e74c3c; background-color: #fdecec; }
+        #decimalInput.invalid { border-color: #e74c3c; background-color: #fdecec; }
+
+        /* 設定區的小輸入框 (修正被蓋掉的問題) */
+        .setting-input-sm {
+            width: 50px !important; /* 強制寬度 */
+            padding: 5px; text-align: center;
+            border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
+            font-weight: normal; color: #333;
+        }
+
         .error-msg { color: #e74c3c; font-size: 12px; height: 15px; margin-top: -10px; }
 
-        .binary-container {
-            display: flex; justify-content: center; gap: 5px; margin-top: 0; flex-wrap: wrap;
-        }
+        .binary-container { display: flex; justify-content: center; gap: 5px; margin-top: 0; flex-wrap: wrap; }
         .bit-box { display: flex; flex-direction: column; align-items: center; width: 35px; }
         .bit-label { font-size: 12px; color: #888; margin-bottom: 2px; }
         .bit-value {
@@ -138,11 +101,8 @@
         }
         .bit-value.active { border-color: var(--primary-color); background-color: #ebf5ff; }
 
-        /* --- 分頁籤 --- */
-        .tabs-header {
-            display: flex; overflow-x: auto; background: #ddd; border-radius: 10px 10px 0 0;
-            padding: 5px 5px 0 5px; gap: 5px;
-        }
+        /* --- Tabs --- */
+        .tabs-header { display: flex; overflow-x: auto; background: #ddd; border-radius: 10px 10px 0 0; padding: 5px 5px 0 5px; gap: 5px; }
         .tab-btn {
             padding: 10px 15px; background: var(--tab-inactive); border: none; border-radius: 10px 10px 0 0;
             cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
@@ -165,7 +125,7 @@
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- 計時器 UI --- */
+        /* --- Timer UI --- */
         .timer-display-row {
             position: relative; width: 100%; display: flex; justify-content: center; align-items: center;
             margin: 15px 0; height: 60px;
@@ -181,12 +141,8 @@
         }
         .btn-reset-top:hover { background-color: #c0392b; }
 
-        .controls-wrapper {
-            display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto;
-        }
-        .btn-group {
-            display: flex; justify-content: space-between; width: 100%; margin-bottom: 10px; gap: 10px;
-        }
+        .controls-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; }
+        .btn-group { display: flex; justify-content: space-between; width: 100%; margin-bottom: 10px; gap: 10px; }
         .btn-column { display: flex; flex-direction: column; width: 32%; gap: 10px; }
         
         .timer-btn {
@@ -210,49 +166,27 @@
         .btn-sub-reset:hover:not(:disabled) { background-color: var(--sub-reset-color); color: white; }
         .btn-sub-reset:disabled { border-color: #e0e0e0; color: #ccc; background-color: transparent; cursor: not-allowed; opacity: 0.5; }
 
-        /* --- v22 設定區塊：改用 Flex 模擬上方寬度 --- */
+        /* --- Settings UI --- */
         .settings-flex-row {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin-bottom: 20px;
-            gap: 10px;
+            display: flex; justify-content: space-between; width: 100%; margin-bottom: 20px; gap: 10px;
         }
         .setting-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #f9f9f9;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #eee;
-            width: 32%; /* 1. 關鍵：跟上方 .btn-column 一樣寬 */
-            box-sizing: border-box;
+            display: flex; flex-direction: column; align-items: center; background: #f9f9f9;
+            padding: 10px 5px; /* 縮小 padding 防止撐爆 */
+            border-radius: 8px; border: 1px solid #eee;
+            width: 32%; box-sizing: border-box;
         }
-        .setting-item label {
-            font-size: 0.9rem; color: #555; margin-bottom: 5px; font-weight: bold;
-        }
+        .setting-item label { font-size: 0.9rem; color: #555; margin-bottom: 5px; font-weight: bold; }
+        
         .time-input-row {
-            display: flex; align-items: center; gap: 3px; justify-content: center; width: 100%;
-        }
-        .setting-input-sm {
-            width: 40px; padding: 5px; text-align: center;
-            border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
+            display: flex; align-items: center; gap: 2px; justify-content: center; width: 100%; font-size: 12px;
         }
         
         .options-col {
-            display: flex;
-            flex-direction: column; 
-            align-items: flex-start;
-            width: 100%;
-            padding: 10px 20px;
-            border-top: 1px solid #eee;
-            margin-top: 10px;
-            gap: 15px;
+            display: flex; flex-direction: column; align-items: flex-start; width: 100%;
+            padding: 10px 20px; border-top: 1px solid #eee; margin-top: 10px; gap: 15px;
         }
-        .checkbox-wrapper {
-            display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
-        }
+        .checkbox-wrapper { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
         .checkbox-wrapper input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
         .checkbox-wrapper.disabled { opacity: 0.5; cursor: not-allowed; }
         .permission-hint {
@@ -308,12 +242,10 @@
     <div class="container">
         <h2 class="with-border">計時器設定</h2>
         
-        <!-- 1. 改用 Flex 排版，確保與上方按鈕寬度對齊 -->
         <div class="settings-flex-row">
             <div class="setting-item">
                 <label>1王</label>
                 <div class="time-input-row">
-                    <!-- 2. 增加 onblur -->
                     <input type="number" id="conf-d1-m" class="setting-input-sm" placeholder="分" onchange="saveSettings()" onblur="saveSettings(true)"> 分
                     <input type="number" id="conf-d1-s" class="setting-input-sm" placeholder="秒" onchange="saveSettings()" onblur="saveSettings(true)"> 秒
                 </div>
@@ -357,7 +289,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v22'; // 更新版本
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v22'; 
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
     const STORAGE_KEY_CONF = 'dailyKingSettings_v2'; 
 
@@ -372,7 +304,6 @@
         autoNext: false, notify: true
     };
 
-    // --- Web Worker ---
     const workerBlob = new Blob([`
         setInterval(() => { postMessage('tick'); }, 250);
     `], { type: 'application/javascript' });
@@ -412,22 +343,16 @@
         if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(e => console.log(e));
     });
 
-    // --- 2. 全域 Toast 通知功能 ---
     function showToast(msg) {
         const toast = document.getElementById('toast-notification');
         toast.innerText = msg;
         toast.classList.add('show');
-        
         if (toastTimeout) clearTimeout(toastTimeout);
-        
         toastTimeout = setTimeout(() => {
             toast.classList.remove('show');
-        }, 2000); // 2秒後消失
+        }, 2000);
     }
 
-    /* =========================================
-       設定存取與邏輯
-       ========================================= */
     function loadSettings() {
         const savedConf = localStorage.getItem(STORAGE_KEY_CONF);
         if (savedConf) {
@@ -448,7 +373,6 @@
         document.getElementById(`${baseId}-s`).value = s;
     }
 
-    // showToastFlag: 用來控制是否要顯示「已儲存」(預設false，只有使用者觸發時為true)
     function saveSettings(showToastFlag = false) {
         globalConfig.d1 = getTimeFromInputs('conf-d1');
         globalConfig.d2 = getTimeFromInputs('conf-d2');
@@ -515,9 +439,6 @@
         });
     }
 
-    /* =========================================
-       全域計時檢查
-       ========================================= */
     function checkAllTimers() {
         const now = Date.now();
         tabs.forEach(tab => {
@@ -555,9 +476,6 @@
         });
     }
 
-    /* =========================================
-       每日密碼
-       ========================================= */
     function initDailyPassword() {
         const savedData = localStorage.getItem(STORAGE_KEY_PWD);
         if (!savedData) return;
