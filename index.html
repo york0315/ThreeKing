@@ -18,8 +18,9 @@
             --timeout-color: #c0392b; 
             --success-color: #27ae60; 
             --info-gray: #95a5a6; 
-            --tab-bg: #f1f3f5;       /* 新增：分頁區背景色 */
-            --tab-border: #e0e0e0;   /* 新增：分頁區框線 */
+            --tab-bg: #f1f3f5;       
+            --tab-inactive-bg: #e9ecef; /* 新增：未選中背景色 */
+            --tab-border: #ced4da;      /* 新增：未選中邊框色 */
             --box-border: #bdc3c7;
             --toast-bg: rgba(0, 0, 0, 0.8);
         }
@@ -100,21 +101,19 @@
         .bit-box { display: flex; flex-direction: column; align-items: center; width: 35px; }
         .bit-label { font-size: 12px; color: #888; margin-bottom: 2px; }
         
-        /* --- 1. 修復二進位框線 (強制指定顏色) --- */
         .bit-value {
             width: 35px; height: 45px; line-height: 45px; 
-            border: 2px solid #bdc3c7; /* 明確指定顏色 */
+            border: 2px solid #bdc3c7; 
             border-radius: 5px; font-size: 20px; font-weight: bold; background-color: white;
             color: var(--primary-color); transition: all 0.3s;
         }
         .bit-value.active { border-color: var(--primary-color); background-color: #ebf5ff; }
 
-        /* --- 2. TAG 樣式重構：Card Footer 風格 --- */
+        /* --- TAG 樣式重構 --- */
         
-        /* 上半部：內容區 */
         .tab-content-wrapper {
             background: white; 
-            border-radius: 15px 15px 0 0; /* 上方圓角 */
+            border-radius: 15px 15px 0 0; 
             padding: 10px 20px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
             min-height: auto;
@@ -123,53 +122,57 @@
             position: relative;
         }
 
-        /* 下半部：分頁區 (Footer) */
         .tabs-header { 
             display: flex; 
             overflow-x: auto; 
-            
-            /* 關鍵：給予背景色和下方圓角，形成完整的「框」 */
             background: var(--tab-bg); 
             border-radius: 0 0 15px 15px; 
-            border-top: 1px solid var(--tab-border); /* 分隔線 */
-            
+            border-top: 1px solid var(--tab-border); 
             padding: 8px 15px; 
             gap: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* 陰影與上方一致 */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
             align-items: center;
         }
 
-        /* 分頁按鈕：膠囊風格 */
+        /* 分頁按鈕：基礎樣式 */
         .tab-btn {
             padding: 6px 15px; 
             
-            /* 預設透明，融入灰色背景 */
-            background: transparent; 
-            border: 1px solid transparent; 
-            border-radius: 20px; /* 圓潤膠囊 */
+            /* 2. 未選擇時：加上淺灰背景與明顯邊框 */
+            background: var(--tab-inactive-bg); 
+            border: 1px solid var(--tab-border); 
+            border-radius: 20px; 
             
             cursor: pointer; 
             font-weight: bold; 
             color: #666;
             display: flex; align-items: center; gap: 8px;
-            min-width: auto; /* 自動寬度 */
+            min-width: auto; 
             justify-content: center; 
             transition: all 0.2s; 
             white-space: nowrap;
         }
 
-        /* 選中狀態：白色突起 */
+        /* 選中狀態：白色突起 + 藍色邊框 */
         .tab-btn.active { 
             background: white; 
             color: var(--primary-color); 
-            border-color: #ddd;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-color: var(--primary-color); /* 選中時邊框變藍 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        /* --- 1. 刪除按鈕 (X) 邏輯修改 --- */
         .tab-close { 
             font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; 
-            margin-left: 5px;
+            margin-left: 2px;
+            display: none; /* 預設隱藏 */
         }
+        
+        /* 只有在 .active (選中) 的按鈕內才顯示 X */
+        .tab-btn.active .tab-close {
+            display: inline-block;
+        }
+
         .tab-close:hover { background: #ffcccc; color: #d00; }
         
         .add-tab-btn {
@@ -301,12 +304,10 @@
     </div>
 
     <div class="container timer-section">
-        <!-- 內容區 (圓角在上) -->
         <div class="tab-content-wrapper" id="tabsContent">
             <!-- JS 動態內容 -->
         </div>
         
-        <!-- 分頁按鈕區 (圓角在下，淺灰背景) -->
         <div class="tabs-header" id="tabsHeader">
             <button class="add-tab-btn" onclick="addNewTab()">+</button>
         </div>
