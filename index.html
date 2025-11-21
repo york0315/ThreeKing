@@ -410,7 +410,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v15'; // 版本更新
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v16'; // 版本更新
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
 
     let notificationPermission = "default";
@@ -450,13 +450,12 @@
     };
 
     /* =========================================
-       [核心修正] 全域計時檢查 (移除猜測邏輯)
+       [核心修正] 全域計時檢查
        ========================================= */
     function checkAllTimers() {
         const now = Date.now();
         
         tabs.forEach(tab => {
-            // 只有在「有設定結束時間」且「還沒完成」時才計算
             if (tab.endTime && !tab.finished) { 
                 const remaining = Math.ceil((tab.endTime - now) / 1000);
                 
@@ -472,16 +471,12 @@
                     tab.endTime = null; 
                     tab.finished = true; 
 
-                    // --- 修正點：直接使用 tab.currentStep 來決定是哪個按鈕結束 ---
-                    // 絕對準確，不再依賴按鈕狀態去猜測
                     const btnStep = tab.currentStep; 
                     
                     if (btnStep) {
                         const btn = document.getElementById(`btn${btnStep}-${tab.id}`);
                         markButtonAsFinished(btn);
                         sendNotification(`[${tab.name}] 計時結束`, `${btnStep}王 時間到了！`);
-                        
-                        // 結束後清除 currentStep，避免邏輯殘留
                         tab.currentStep = null;
                     }
                 }
@@ -654,7 +649,7 @@
             name: name,
             endTime: null,
             finished: false,
-            currentStep: null // 新增：明確記錄現在是第幾王在跑
+            currentStep: null
         };
         tabs.push(newTab);
 
@@ -673,13 +668,14 @@
         pane.className = 'tab-pane';
         pane.id = `tab-pane-${id}`;
         
+        // --- 修改 1王 的時間為 150秒 (2分30秒) ---
         pane.innerHTML = `
             <div class="timer-display" id="timer-display-${id}">00:00</div>
             <div class="controls-wrapper">
                 <div class="btn-group">
                     <div class="btn-column">
-                        <button class="timer-btn" id="btn1-${id}" onclick="startTabTimer(${id}, 160, 1)">
-                            <span class="btn-title">1王</span><span class="btn-subtitle">(2分40秒)</span>
+                        <button class="timer-btn" id="btn1-${id}" onclick="startTabTimer(${id}, 150, 1)">
+                            <span class="btn-title">1王</span><span class="btn-subtitle">(2分30秒)</span>
                         </button>
                         <button class="btn-sub-reset" id="sub-reset-btn1-${id}" onclick="individualReset(${id}, 1)" disabled>重置</button>
                     </div>
@@ -777,7 +773,6 @@
         tabData.endTime = now + (seconds * 1000);
         tabData.finished = false;
         
-        // --- 修正點：明確記錄現在跑的是第幾王 ---
         tabData.currentStep = btnStep;
 
         updateDisplay(display, seconds);
@@ -788,7 +783,7 @@
         if (!tabData) return;
 
         tabData.endTime = null;
-        tabData.currentStep = null; // 重置時也清空步驟記錄
+        tabData.currentStep = null; 
         
         document.getElementById(`timer-display-${tabId}`).innerText = "00:00";
 
@@ -800,7 +795,7 @@
         if(currentResetBtn) currentResetBtn.disabled = true;
 
         if (btnStep === 1) {
-            restoreButtonState(btn1, "1王", "(2分40秒)"); btn1.disabled = false;
+            restoreButtonState(btn1, "1王", "(2分30秒)"); btn1.disabled = false;
             restoreButtonState(btn2, "2王", "(1分20秒)"); btn2.disabled = true; document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
             restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = true; document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
         } else if (btnStep === 2) {
@@ -816,14 +811,14 @@
         if (!tabData) return;
 
         tabData.endTime = null;
-        tabData.currentStep = null; // 清空步驟記錄
+        tabData.currentStep = null; 
         document.getElementById(`timer-display-${tabId}`).innerText = "00:00";
 
         const btn1 = document.getElementById(`btn1-${tabId}`);
         const btn2 = document.getElementById(`btn2-${tabId}`);
         const btn3 = document.getElementById(`btn3-${tabId}`);
 
-        restoreButtonState(btn1, "1王", "(2分40秒)"); btn1.disabled = false;
+        restoreButtonState(btn1, "1王", "(2分30秒)"); btn1.disabled = false;
         restoreButtonState(btn2, "2王", "(1分20秒)"); btn2.disabled = true;
         restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = true;
 
