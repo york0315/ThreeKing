@@ -19,8 +19,8 @@
             --success-color: #27ae60; 
             --info-gray: #95a5a6; 
             --tab-bg: #f1f3f5;       
-            --tab-inactive-bg: #e9ecef; /* 新增：未選中背景色 */
-            --tab-border: #ced4da;      /* 新增：未選中邊框色 */
+            --tab-inactive-bg: #e9ecef; 
+            --tab-border: #ced4da;      
             --box-border: #bdc3c7;
             --toast-bg: rgba(0, 0, 0, 0.8);
         }
@@ -37,7 +37,7 @@
             padding-bottom: 80px;
         }
 
-        /* --- 標題置中 --- */
+        /* 標題 */
         h1 {
             color: #2c3e50;
             margin-bottom: 15px; 
@@ -100,7 +100,6 @@
         .binary-container { display: flex; justify-content: center; gap: 5px; margin-top: 0; flex-wrap: wrap; }
         .bit-box { display: flex; flex-direction: column; align-items: center; width: 35px; }
         .bit-label { font-size: 12px; color: #888; margin-bottom: 2px; }
-        
         .bit-value {
             width: 35px; height: 45px; line-height: 45px; 
             border: 2px solid #bdc3c7; 
@@ -109,7 +108,7 @@
         }
         .bit-value.active { border-color: var(--primary-color); background-color: #ebf5ff; }
 
-        /* --- TAG 樣式重構 --- */
+        /* --- TAG 區塊重構 (v31) --- */
         
         .tab-content-wrapper {
             background: white; 
@@ -122,27 +121,51 @@
             position: relative;
         }
 
-        .tabs-header { 
+        /* 下方整體容器 (灰色背景) */
+        .tabs-container { 
             display: flex; 
-            overflow-x: auto; 
             background: var(--tab-bg); 
             border-radius: 0 0 15px 15px; 
             border-top: 1px solid var(--tab-border); 
             padding: 8px 15px; 
-            gap: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
             align-items: center;
+            overflow: hidden; /* 防止子元素溢出 */
         }
 
-        /* 分頁按鈕：基礎樣式 */
+        /* 1. 捲動區域 (隱藏捲軸 + 拖曳) */
+        .tabs-list {
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            flex-grow: 1; /* 佔據剩餘空間 */
+            cursor: grab; /* 手掌游標 */
+            
+            /* 隱藏捲軸 */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE 10+ */
+            padding-bottom: 0; /* 修正可能出現的捲軸高度 */
+        }
+        .tabs-list::-webkit-scrollbar { 
+            display: none; /* Chrome/Safari */
+        }
+        .tabs-list.active {
+            cursor: grabbing; /* 拖曳時變緊抓 */
+        }
+
+        /* 2. 固定在右側的按鈕區 */
+        .add-tab-wrapper {
+            margin-left: 10px;
+            flex-shrink: 0; /* 防止被壓縮 */
+            padding-left: 10px;
+            border-left: 1px solid #ccc; /* 分隔線 */
+        }
+
         .tab-btn {
             padding: 6px 15px; 
-            
-            /* 2. 未選擇時：加上淺灰背景與明顯邊框 */
             background: var(--tab-inactive-bg); 
             border: 1px solid var(--tab-border); 
             border-radius: 20px; 
-            
             cursor: pointer; 
             font-weight: bold; 
             color: #666;
@@ -151,33 +174,27 @@
             justify-content: center; 
             transition: all 0.2s; 
             white-space: nowrap;
+            user-select: none; /* 防止拖曳時選取文字 */
         }
 
-        /* 選中狀態：白色突起 + 藍色邊框 */
         .tab-btn.active { 
             background: white; 
             color: var(--primary-color); 
-            border-color: var(--primary-color); /* 選中時邊框變藍 */
+            border-color: var(--primary-color); 
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* --- 1. 刪除按鈕 (X) 邏輯修改 --- */
         .tab-close { 
             font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; 
             margin-left: 2px;
-            display: none; /* 預設隱藏 */
+            display: none; 
         }
-        
-        /* 只有在 .active (選中) 的按鈕內才顯示 X */
-        .tab-btn.active .tab-close {
-            display: inline-block;
-        }
-
+        .tab-btn.active .tab-close { display: inline-block; }
         .tab-close:hover { background: #ffcccc; color: #d00; }
         
         .add-tab-btn {
             padding: 5px 12px; font-size: 18px; background: #4a90e2; color: white;
-            border: none; border-radius: 50%; cursor: pointer; margin-left: auto;
+            border: none; border-radius: 50%; cursor: pointer;
             width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
         }
         .add-tab-btn:hover { background-color: #357abd; }
@@ -186,7 +203,7 @@
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- Timer UI --- */
+        /* Timer UI */
         .timer-display-row {
             position: relative; width: 100%; max-width: 500px; margin: 10px auto; height: 60px;
             display: flex; justify-content: center; align-items: center;
@@ -308,8 +325,16 @@
             <!-- JS 動態內容 -->
         </div>
         
-        <div class="tabs-header" id="tabsHeader">
-            <button class="add-tab-btn" onclick="addNewTab()">+</button>
+        <!-- v31 結構變更：分離 Scroll 區與按鈕區 -->
+        <div class="tabs-container">
+            <!-- 1. 可捲動的分頁列表 -->
+            <div class="tabs-list" id="tabsList">
+                <!-- JS 動態插入 -->
+            </div>
+            <!-- 2. 固定的新增按鈕 -->
+            <div class="add-tab-wrapper">
+                <button class="add-tab-btn" onclick="addNewTab()">+</button>
+            </div>
         </div>
     </div>
 
@@ -363,7 +388,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v24'; 
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v31'; 
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
     const STORAGE_KEY_CONF = 'dailyKingSettings_v2'; 
 
@@ -411,7 +436,40 @@
         loadSettings();
         loadTabsFromStorage();
         checkNotificationPermission();
+        
+        // 啟用拖曳功能
+        enableDragScroll();
     };
+
+    /* --- 2. 拖曳捲動邏輯 --- */
+    function enableDragScroll() {
+        const slider = document.getElementById('tabsList');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true;
+            slider.classList.add('active');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.classList.remove('active');
+        });
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.classList.remove('active');
+        });
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2; // 捲動速度倍率
+            slider.scrollLeft = scrollLeft - walk;
+        });
+    }
 
     window.addEventListener('focus', () => {
         if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(e => console.log(e));
@@ -718,8 +776,9 @@
         };
         tabs.push(newTab);
 
-        const headerContainer = document.getElementById('tabsHeader');
-        const addBtn = headerContainer.querySelector('.add-tab-btn');
+        // v31 修正：插入到 tabsList
+        const listContainer = document.getElementById('tabsList');
+        
         const tabBtn = document.createElement('div');
         tabBtn.className = 'tab-btn';
         tabBtn.id = `tab-btn-${id}`;
@@ -727,7 +786,7 @@
         tabBtn.ondblclick = () => renameTab(id);
         tabBtn.innerHTML = `<span id="tab-name-${id}">${name}</span><span class="tab-close" onclick="removeTab(${id})">✕</span>`;
         
-        headerContainer.insertBefore(tabBtn, addBtn);
+        listContainer.appendChild(tabBtn);
 
         const contentContainer = document.getElementById('tabsContent');
         const pane = document.createElement('div');
@@ -776,7 +835,13 @@
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         const btn = document.getElementById(`tab-btn-${id}`);
         const pane = document.getElementById(`tab-pane-${id}`);
-        if(btn && pane) { btn.classList.add('active'); pane.classList.add('active'); }
+        if(btn && pane) { 
+            btn.classList.add('active'); 
+            pane.classList.add('active'); 
+            
+            // 自動捲動到選中的分頁
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
     }
 
     function removeTab(id) {
