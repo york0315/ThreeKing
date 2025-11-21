@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每日三王計時器</title>
+    <title>三王計時器</title>
     
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/850/850960.png">
     <link rel="manifest" href="manifest.json">
@@ -32,14 +32,22 @@
             margin: 0;
             background-color: #f0f2f5;
             padding: 20px;
-            padding-bottom: 50px; /* 預留底部空間 */
+            padding-bottom: 80px;
         }
 
+        /* --- 1. 標題含圖示 --- */
         h1 {
             color: #2c3e50;
             margin-bottom: 20px;
             font-size: 2.5rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        h1 img {
+            width: 50px;
+            height: 50px;
         }
 
         .main-wrapper {
@@ -68,7 +76,8 @@
 
         h2 {
             color: #333;
-            border-bottom: 2px solid var(--secondary-color);
+            /* --- 6. 取消橫線 --- */
+            border-bottom: none; 
             padding-bottom: 5px; 
             margin-bottom: 5px;  
             font-size: 1.5rem;
@@ -77,34 +86,35 @@
             align-items: center;     
             gap: 10px;               
         }
+        
+        /* 有底線的標題 (給設定區用) */
+        h2.with-border {
+            border-bottom: 2px solid var(--secondary-color);
+        }
 
-        /* --- 提示文字 --- */
         .save-msg {
             font-size: 0.85rem; color: var(--info-gray); font-weight: normal;
-            height: 20px; margin-bottom: 15px; opacity: 0; transition: opacity 0.5s ease; 
+            height: 20px; margin-bottom: 5px; opacity: 0; transition: opacity 0.5s ease; 
         }
         .save-msg.show { opacity: 1; }
 
-        .tab-save-msg {
-            font-size: 0.85rem; color: var(--info-gray); font-weight: normal;
-            height: 20px; margin-top: 5px; opacity: 0; transition: opacity 0.5s ease;
-            align-self: flex-end; width: auto; text-align: right; padding-right: 5px;
-        }
-        .tab-save-msg.show { opacity: 1; }
-
-        /* --- 輸入框與二進位 --- */
+        /* --- 7. 輸入框寬度調整 (對齊8格) --- */
         .input-group {
             display: flex; flex-direction: column; gap: 15px; align-items: center;
         }
         input[type="number"] {
             padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px;
-            width: 80%; text-align: center; font-weight: bold; color: #2c3e50;
+            text-align: center; font-weight: bold; color: #2c3e50;
+            /* 8格寬度(35*8) + 間距(5*7) = 280+35 = 315px */
+            width: 315px; 
+            max-width: 100%;
+            box-sizing: border-box;
         }
         input[type="number"].invalid { border-color: #e74c3c; background-color: #fdecec; }
         .error-msg { color: #e74c3c; font-size: 12px; height: 15px; margin-top: -10px; }
 
         .binary-container {
-            display: flex; justify-content: center; gap: 5px; margin-top: 10px; flex-wrap: wrap;
+            display: flex; justify-content: center; gap: 5px; margin-top: 0; flex-wrap: wrap;
         }
         .bit-box { display: flex; flex-direction: column; align-items: center; width: 35px; }
         .bit-label { font-size: 12px; color: #888; margin-bottom: 2px; }
@@ -142,11 +152,41 @@
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- 計時器 UI --- */
-        .timer-display {
-            font-size: 3.5rem; font-family: 'Courier New', Courier, monospace; margin: 15px 0;
-            color: #333; font-weight: bold; text-align: center;
+        /* --- 8. 計時器顯示區塊重構 (右上角按鈕) --- */
+        .timer-display-row {
+            position: relative; /* 讓絕對定位的按鈕參考此容器 */
+            width: 100%;
+            display: flex;
+            justify-content: center; /* 時間置中 */
+            align-items: center;
+            margin: 15px 0;
+            height: 60px;
         }
+
+        .timer-display {
+            font-size: 3.5rem; font-family: 'Courier New', Courier, monospace;
+            color: #333; font-weight: bold;
+            margin: 0; padding: 0;
+        }
+
+        /* 右上角全部重置按鈕 */
+        .btn-reset-top {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--reset-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-reset-top:hover { background-color: #c0392b; }
+
         .controls-wrapper {
             display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto;
         }
@@ -167,19 +207,15 @@
         }
         .btn-title { font-size: 1.2rem; font-weight: bold; line-height: 1.2; }
         .btn-subtitle { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 2px; }
+        
         .btn-sub-reset {
             background-color: white; border: 1px solid var(--sub-reset-color); color: var(--sub-reset-color);
             padding: 5px 0; border-radius: 5px; font-size: 12px; cursor: pointer; transition: all 0.2s; width: 100%;
         }
         .btn-sub-reset:hover:not(:disabled) { background-color: var(--sub-reset-color); color: white; }
         .btn-sub-reset:disabled { border-color: #e0e0e0; color: #ccc; background-color: transparent; cursor: not-allowed; opacity: 0.5; }
-        .btn-reset {
-            background-color: var(--reset-color); color: white; border: none; padding: 8px 20px; 
-            border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; align-self: flex-end; width: auto; margin-top: 20px;
-        }
-        .btn-reset:hover { background-color: #c0392b; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
-        /* --- 新增：設定區塊樣式 (v20) --- */
+        /* --- v20 設定區塊 --- */
         .settings-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -197,63 +233,69 @@
             border: 1px solid #eee;
         }
         .setting-item label {
-            font-size: 0.9rem;
-            color: #555;
-            margin-bottom: 5px;
-            font-weight: bold;
+            font-size: 0.9rem; color: #555; margin-bottom: 5px; font-weight: bold;
         }
-        .setting-input {
-            width: 80%;
-            padding: 5px;
-            text-align: center;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+        /* 時間輸入框 (分/秒) */
+        .time-input-row {
+            display: flex; align-items: center; gap: 5px; justify-content: center; width: 100%;
+        }
+        .setting-input-sm {
+            width: 40px; padding: 5px; text-align: center;
+            border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
         }
         
-        .options-row {
+        .options-col {
             display: flex;
-            justify-content: space-around;
-            align-items: center;
+            flex-direction: column; /* 5. 垂直排列 */
+            align-items: flex-start;
             width: 100%;
-            padding: 10px 0;
+            padding: 10px 20px;
             border-top: 1px solid #eee;
             margin-top: 10px;
+            gap: 15px;
         }
         .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            user-select: none;
+            display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
         }
-        .checkbox-wrapper input[type="checkbox"] {
-            transform: scale(1.2);
-            cursor: pointer;
-        }
-        .checkbox-wrapper.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .checkbox-wrapper input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+        .checkbox-wrapper.disabled { opacity: 0.5; cursor: not-allowed; }
         .permission-hint {
-            color: var(--reset-color);
-            font-size: 0.8rem;
-            margin-top: 5px;
-            display: none;
+            color: var(--reset-color); font-size: 0.8rem; margin-left: 28px; margin-top: -10px; display: none;
+        }
+
+        /* 9. 安裝按鈕 */
+        .btn-install {
+            background-color: #27ae60; color: white; border: none; padding: 10px 20px;
+            border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;
+            width: 100%; margin-top: 10px; display: none; /* 預設隱藏 */
+        }
+        .btn-install:hover { background-color: #2ecc71; }
+
+        .tab-save-msg {
+            /* 改位置到表格下方 */
+            align-self: center; text-align: center; margin-top: 10px;
         }
 
     </style>
 </head>
 <body>
 
-<h1>每日三王計時器</h1>
+<!-- 1. 標題含圖示 -->
+<h1>
+    <img src="https://cdn-icons-png.flaticon.com/512/850/850960.png" alt="Logo">
+    三王計時器
+</h1>
 
 <div class="main-wrapper">
 
+    <!-- 上半部：每日密碼 -->
     <div class="container">
+        <!-- 6. 取消橫線 -->
         <h2>每日密碼</h2>
         <div id="saveMsg" class="save-msg">(已記錄當下密碼)</div>
         
         <div class="input-group">
+            <!-- 7. 寬度 315px -->
             <input type="number" id="decimalInput" placeholder="請輸入5的倍數 (例如 160)" min="5" max="255" step="5" 
                    oninput="handleInputVisual()" 
                    onblur="handleInputSave()">
@@ -262,6 +304,7 @@
         </div>
     </div>
 
+    <!-- 中間：多頁籤計時器 -->
     <div class="container timer-section">
         <div class="tabs-header" id="tabsHeader">
             <button class="add-tab-btn" onclick="addNewTab()">+</button>
@@ -271,64 +314,78 @@
         </div>
     </div>
 
-    <!-- 新增：設定區塊 (v20) -->
+    <!-- 下半部：設定區 -->
     <div class="container">
-        <h2>內容設定</h2>
+        <!-- 2. 標題修改 + 橫線 -->
+        <h2 class="with-border">計時器設定</h2>
         
-        <!-- 1. 時間調整 -->
+        <!-- 3. 分/秒 調整 -->
         <div class="settings-grid">
             <div class="setting-item">
-                <label>1王 (秒)</label>
-                <input type="number" id="conf-d1" class="setting-input" value="150" onchange="saveSettings()">
+                <label>1王</label>
+                <div class="time-input-row">
+                    <input type="number" id="conf-d1-m" class="setting-input-sm" placeholder="分" onchange="saveSettings()"> 分
+                    <input type="number" id="conf-d1-s" class="setting-input-sm" placeholder="秒" onchange="saveSettings()"> 秒
+                </div>
             </div>
             <div class="setting-item">
-                <label>2王 (秒)</label>
-                <input type="number" id="conf-d2" class="setting-input" value="80" onchange="saveSettings()">
+                <label>2王</label>
+                <div class="time-input-row">
+                    <input type="number" id="conf-d2-m" class="setting-input-sm" placeholder="分" onchange="saveSettings()"> 分
+                    <input type="number" id="conf-d2-s" class="setting-input-sm" placeholder="秒" onchange="saveSettings()"> 秒
+                </div>
             </div>
             <div class="setting-item">
-                <label>3王 (秒)</label>
-                <input type="number" id="conf-d3" class="setting-input" value="160" onchange="saveSettings()">
+                <label>3王</label>
+                <div class="time-input-row">
+                    <input type="number" id="conf-d3-m" class="setting-input-sm" placeholder="分" onchange="saveSettings()"> 分
+                    <input type="number" id="conf-d3-s" class="setting-input-sm" placeholder="秒" onchange="saveSettings()"> 秒
+                </div>
             </div>
         </div>
 
-        <!-- 2 & 3. 功能勾選 -->
-        <div class="options-row">
+        <!-- 4 & 5. 選項靠左垂直排列 -->
+        <div class="options-col">
             <label class="checkbox-wrapper">
                 <input type="checkbox" id="conf-auto-next" onchange="handleAutoNextChange()">
-                自動下一關
+                自動點擊下一王啟動
             </label>
 
             <label class="checkbox-wrapper" id="lbl-notify">
                 <input type="checkbox" id="conf-notify" checked onchange="saveSettings()">
                 顯示系統通知
             </label>
+            <!-- 權限提示 -->
+            <div id="perm-hint" class="permission-hint">
+                ⚠️ 系統通知已被封鎖，請點擊網址列鎖頭圖示開啟權限。
+            </div>
         </div>
-        
-        <!-- 權限提示文字 -->
-        <div id="perm-hint" class="permission-hint">
-            ⚠️ 系統通知已被封鎖，請點擊網址列鎖頭圖示開啟權限。
-        </div>
+
+        <!-- 9. 安裝按鈕 -->
+        <button id="btnInstall" class="btn-install" onclick="installPWA()">
+            ⬇️ 安裝為小工具 (應用程式)
+        </button>
     </div>
 
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v16'; 
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v21'; 
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
-    const STORAGE_KEY_CONF = 'dailyKingSettings_v1'; // 新增：設定儲存 Key
+    const STORAGE_KEY_CONF = 'dailyKingSettings_v2'; 
 
     let notificationPermission = "default";
     let blinkInterval = null; 
     let saveMsgTimeout = null; 
     const originalTitle = document.title;
+    
+    // PWA Install Prompt
+    let deferredPrompt;
 
-    // 預設設定值
+    // 預設設定值 (秒數)
     let globalConfig = {
-        d1: 150,
-        d2: 80,
-        d3: 160,
-        autoNext: false,
-        notify: true
+        d1: 150, d2: 80, d3: 160,
+        autoNext: false, notify: true
     };
 
     // --- Web Worker ---
@@ -342,12 +399,31 @@
         if (e.data === 'tick') checkAllTimers(); 
     };
 
+    // --- PWA 安裝事件監聽 ---
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // 防止 Chrome 自動顯示預設的安裝提示
+        e.preventDefault();
+        deferredPrompt = e;
+        // 顯示安裝按鈕
+        const installBtn = document.getElementById('btnInstall');
+        if(installBtn) installBtn.style.display = 'block';
+    });
+
+    async function installPWA() {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            document.getElementById('btnInstall').style.display = 'none';
+        }
+        deferredPrompt = null;
+    }
+
     window.onload = function() {
         renderBinaryGrid("00000000");
         initDailyPassword();
-        loadSettings(); // 載入設定
+        loadSettings();
         loadTabsFromStorage();
-        
         checkNotificationPermission();
     };
 
@@ -356,35 +432,49 @@
     });
 
     /* =========================================
-       [新功能] 設定存取與邏輯
+       設定存取與邏輯
        ========================================= */
     function loadSettings() {
         const savedConf = localStorage.getItem(STORAGE_KEY_CONF);
         if (savedConf) {
             globalConfig = { ...globalConfig, ...JSON.parse(savedConf) };
         }
-        // 填入 UI
-        document.getElementById('conf-d1').value = globalConfig.d1;
-        document.getElementById('conf-d2').value = globalConfig.d2;
-        document.getElementById('conf-d3').value = globalConfig.d3;
+        
+        // 3. 轉換秒數為 分/秒 填入 UI
+        fillTimeInputs('conf-d1', globalConfig.d1);
+        fillTimeInputs('conf-d2', globalConfig.d2);
+        fillTimeInputs('conf-d3', globalConfig.d3);
+
         document.getElementById('conf-auto-next').checked = globalConfig.autoNext;
         document.getElementById('conf-notify').checked = globalConfig.notify;
 
-        // 初始化 UI 狀態
-        handleAutoNextChange(false); // false 代表不存檔，只更新 UI
+        handleAutoNextChange(false);
+    }
+
+    function fillTimeInputs(baseId, totalSeconds) {
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        document.getElementById(`${baseId}-m`).value = m;
+        document.getElementById(`${baseId}-s`).value = s;
     }
 
     function saveSettings() {
-        globalConfig.d1 = parseInt(document.getElementById('conf-d1').value) || 150;
-        globalConfig.d2 = parseInt(document.getElementById('conf-d2').value) || 80;
-        globalConfig.d3 = parseInt(document.getElementById('conf-d3').value) || 160;
+        // 讀取 分/秒 轉回 秒數
+        globalConfig.d1 = getTimeFromInputs('conf-d1');
+        globalConfig.d2 = getTimeFromInputs('conf-d2');
+        globalConfig.d3 = getTimeFromInputs('conf-d3');
+        
         globalConfig.autoNext = document.getElementById('conf-auto-next').checked;
         globalConfig.notify = document.getElementById('conf-notify').checked;
 
         localStorage.setItem(STORAGE_KEY_CONF, JSON.stringify(globalConfig));
-        
-        // 設定變更後，即時更新按鈕上的文字 (若頁籤已存在)
         updateAllButtonLabels();
+    }
+
+    function getTimeFromInputs(baseId) {
+        const m = parseInt(document.getElementById(`${baseId}-m`).value) || 0;
+        const s = parseInt(document.getElementById(`${baseId}-s`).value) || 0;
+        return (m * 60) + s;
     }
 
     function handleAutoNextChange(shouldSave = true) {
@@ -392,22 +482,18 @@
         const notifyCb = document.getElementById('conf-notify');
         const notifyLbl = document.getElementById('lbl-notify');
 
-        // 邏輯：如果勾選自動下一關，則強制關閉並鎖定通知
         if (isAuto) {
             notifyCb.disabled = true;
             notifyLbl.classList.add('disabled');
-            // 這裡不改變 notifyCb.checked 的值，只禁用，方便使用者取消自動後恢復原狀
         } else {
             notifyCb.disabled = false;
             notifyLbl.classList.remove('disabled');
         }
-
         if (shouldSave) saveSettings();
     }
 
     function checkNotificationPermission() {
         if (!("Notification" in window)) return;
-        
         if (Notification.permission === "denied") {
             document.getElementById('perm-hint').style.display = 'block';
         } else if (Notification.permission === "default") {
@@ -420,14 +506,12 @@
         }
     }
 
-    // 輔助：格式化秒數為文字 (例如 150 -> 2分30秒)
     function formatTimeText(seconds) {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         return `(${m}分${s}秒)`;
     }
 
-    // 輔助：更新所有分頁按鈕的文字
     function updateAllButtonLabels() {
         tabs.forEach(tab => {
             const btn1 = document.getElementById(`btn1-${tab.id}`);
@@ -441,7 +525,7 @@
     }
 
     /* =========================================
-       [核心修正] 全域計時檢查 (整合自動下一關)
+       全域計時檢查
        ========================================= */
     function checkAllTimers() {
         const now = Date.now();
@@ -463,29 +547,23 @@
                     tab.finished = true; 
 
                     const btnStep = tab.currentStep; 
-                    
                     if (btnStep) {
                         const btn = document.getElementById(`btn${btnStep}-${tab.id}`);
                         markButtonAsFinished(btn);
                         
                         tab.currentStep = null;
 
-                        // --- v20 核心邏輯判斷 ---
                         if (globalConfig.autoNext) {
-                            // 模式 A: 自動下一關 (靜音、自動觸發)
                             const nextStep = btnStep + 1;
                             if (nextStep <= 3) {
                                 const nextBtn = document.getElementById(`btn${nextStep}-${tab.id}`);
                                 if (nextBtn && !nextBtn.disabled) {
-                                    // 稍微延遲 0.5秒 再按，比較自然
                                     setTimeout(() => nextBtn.click(), 500);
                                 }
                             } else {
-                                // 3王結束，沒有下一關了，發個通知
                                 sendNotification(`[${tab.name}]`, `全部通關完成！`, null, null);
                             }
                         } else {
-                            // 模式 B: 手動下一關 (發通知)
                             if (globalConfig.notify) {
                                 sendNotification(
                                     `[${tab.name}] 計時結束`, 
@@ -506,7 +584,7 @@
     }
 
     /* =========================================
-       [功能] 每日密碼
+       每日密碼
        ========================================= */
     function initDailyPassword() {
         const savedData = localStorage.getItem(STORAGE_KEY_PWD);
@@ -607,35 +685,24 @@
 
     function sendNotification(title, body, tabId, finishedStep) {
         startTitleBlink("【時間到！】" + title);
-        
         if (Notification.permission === "granted") {
             const notification = new Notification(title, {
                 body: body,
                 icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png",
                 requireInteraction: true 
             });
-
             notification.onclick = function() {
-                window.focus(); 
-                notification.close(); 
-                stopTitleBlink();
+                window.focus(); notification.close(); stopTitleBlink();
                 if ('clearAppBadge' in navigator) navigator.clearAppBadge();
-
-                // 自動觸發下一關 (如果不是自動模式，且有點擊通知才做)
                 if (tabId && finishedStep && !globalConfig.autoNext) {
                     const nextStep = finishedStep + 1;
                     if (nextStep <= 3) {
                         const nextBtn = document.getElementById(`btn${nextStep}-${tabId}`);
-                        if (nextBtn && !nextBtn.disabled) {
-                            nextBtn.click(); 
-                        }
+                        if (nextBtn && !nextBtn.disabled) nextBtn.click(); 
                     }
                 }
             };
-        } else { 
-            // 如果被封鎖，只能用 alert
-            setTimeout(() => alert(`${title}\n${body}`), 100); 
-        }
+        } else { setTimeout(() => alert(`${title}\n${body}`), 100); }
     }
 
     window.onclick = function() { stopTitleBlink(); };
@@ -667,7 +734,7 @@
     function showTabSaveFeedback() {
         const activePane = document.querySelector('.tab-pane.active');
         if (!activePane) return;
-        const msgEl = activePane.querySelector('.tab-save-msg');
+        const msgEl = activePane.querySelector(`#tab-save-msg-${activePane.id.split('-')[2]}`);
         if (!msgEl) return;
         if (msgEl.hideTimeout) clearTimeout(msgEl.hideTimeout);
         msgEl.classList.add('show');
@@ -709,13 +776,17 @@
         pane.className = 'tab-pane';
         pane.id = `tab-pane-${id}`;
         
-        // 動態產生文字
         const t1 = formatTimeText(globalConfig.d1);
         const t2 = formatTimeText(globalConfig.d2);
         const t3 = formatTimeText(globalConfig.d3);
 
+        // 8. 計時區結構調整 (Reset 按鈕移至右上)
         pane.innerHTML = `
-            <div class="timer-display" id="timer-display-${id}">00:00</div>
+            <div class="timer-display-row">
+                <div class="timer-display" id="timer-display-${id}">00:00</div>
+                <button class="btn-reset-top" onclick="resetTabTimer(${id})">全部重置</button>
+            </div>
+            
             <div class="controls-wrapper">
                 <div class="btn-group">
                     <div class="btn-column">
@@ -737,7 +808,6 @@
                         <button class="btn-sub-reset" id="sub-reset-btn3-${id}" onclick="individualReset(${id}, 3)" disabled>重置</button>
                     </div>
                 </div>
-                <button class="btn-reset" onclick="resetTabTimer(${id})">全部重置</button>
                 <div id="tab-save-msg-${id}" class="tab-save-msg">(已儲存)</div>
             </div>
         `;
@@ -817,7 +887,6 @@
         const now = Date.now();
         tabData.endTime = now + (seconds * 1000);
         tabData.finished = false;
-        
         tabData.currentStep = btnStep;
 
         updateDisplay(display, seconds);
@@ -839,7 +908,6 @@
         const currentResetBtn = document.getElementById(`sub-reset-btn${btnStep}-${tabId}`);
         if(currentResetBtn) currentResetBtn.disabled = true;
 
-        // 使用 globalConfig 的時間
         const t1 = formatTimeText(globalConfig.d1);
         const t2 = formatTimeText(globalConfig.d2);
         const t3 = formatTimeText(globalConfig.d3);
@@ -881,7 +949,6 @@
         document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
         
         stopTitleBlink();
-        
         if ('clearAppBadge' in navigator) navigator.clearAppBadge();
     }
 
