@@ -73,7 +73,6 @@
             gap: 10px;               
         }
 
-        /* 每日密碼的儲存提示 */
         .save-msg {
             font-size: 0.85rem;        
             color: var(--info-gray);   
@@ -85,23 +84,21 @@
         }
         .save-msg.show { opacity: 1; }
 
-        /* --- 新增：分頁(TAG)儲存提示樣式 --- */
         .tab-save-msg {
             font-size: 0.85rem;
             color: var(--info-gray);
             font-weight: normal;
             height: 20px;
-            margin-top: 5px; /* 與全部重置按鈕的距離 */
+            margin-top: 5px;
             opacity: 0;
             transition: opacity 0.5s ease;
-            align-self: flex-end; /* 靠右對齊 (對齊按鈕) */
+            align-self: flex-end; 
             width: auto;
             text-align: right;
             padding-right: 5px;
         }
         .tab-save-msg.show { opacity: 1; }
 
-        /* --- 每日密碼 --- */
         .input-group {
             display: flex;
             flex-direction: column;
@@ -171,7 +168,6 @@
             background-color: #ebf5ff;
         }
 
-        /* --- 分頁籤 --- */
         .tabs-header {
             display: flex;
             overflow-x: auto;
@@ -252,7 +248,6 @@
             to { opacity: 1; }
         }
 
-        /* --- 計時器與按鈕 --- */
         .timer-display {
             font-size: 3.5rem;
             font-family: 'Courier New', Courier, monospace;
@@ -337,7 +332,6 @@
             margin-top: 2px;
         }
 
-        /* --- 個別重置按鈕 --- */
         .btn-sub-reset {
             background-color: white;
             border: 1px solid var(--sub-reset-color);
@@ -363,7 +357,6 @@
             opacity: 0.5;
         }
 
-        /* --- 全部重置 按鈕 --- */
         .btn-reset {
             background-color: var(--reset-color);
             color: white;
@@ -391,7 +384,6 @@
 
 <div class="main-wrapper">
 
-    <!-- 上半部：每日密碼 -->
     <div class="container">
         <h2>每日密碼</h2>
         <div id="saveMsg" class="save-msg">(已記錄當下密碼)</div>
@@ -405,7 +397,6 @@
         </div>
     </div>
 
-    <!-- 下半部：多頁籤計時器 -->
     <div class="container timer-section">
         <div class="tabs-header" id="tabsHeader">
             <button class="add-tab-btn" onclick="addNewTab()">+</button>
@@ -418,7 +409,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v7'; // 升級版本
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v14'; // 版本更新
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
 
     let notificationPermission = "default";
@@ -426,7 +417,25 @@
     let saveMsgTimeout = null; 
     const originalTitle = document.title;
 
-    // --- 初始化 ---
+    // --- 定義 Web Worker (背景計時助手) ---
+    // 瀏覽器不會節流 Worker，我們讓 Worker 每 250ms 發送一個訊號給主程式
+    // 這樣主程式就會被強制喚醒去檢查時間
+    const workerBlob = new Blob([`
+        setInterval(() => {
+            postMessage('tick');
+        }, 250);
+    `], { type: 'application/javascript' });
+    
+    const workerUrl = URL.createObjectURL(workerBlob);
+    const timerWorker = new Worker(workerUrl);
+
+    // 讓 Worker 監聽 (雖然我們主要用它來發送，但保留接收能力)
+    timerWorker.onmessage = function(e) {
+        if (e.data === 'tick') {
+            checkAllTimers(); // 每次 Worker 報時，檢查所有計時器
+        }
+    };
+
     window.onload = function() {
         renderBinaryGrid("00000000");
         initDailyPassword();
@@ -443,30 +452,77 @@
     };
 
     /* =========================================
+       [核心邏輯] 全域計時檢查 (由 Web Worker 觸發)
+       ========================================= */
+    function checkAllTimers() {
+        const now = Date.now();
+        
+        // 遍歷所有分頁，檢查是否有正在運行的計時器
+        tabs.forEach(tab => {
+            if (tab.endTime && !tab.finished) { // 只有設定了結束時間且尚未結束的才檢查
+                // 剩餘秒數
+                const remaining = Math.ceil((tab.endTime - now) / 1000);
+                
+                // 如果是當前顯示的分頁，更新畫面
+                const activePane = document.getElementById(`tab-pane-${tab.id}`);
+                if (activePane && activePane.classList.contains('active')) {
+                    const display = document.getElementById(`timer-display-${tab.id}`);
+                    if (display && remaining >= 0) {
+                        updateDisplay(display, remaining);
+                    }
+                }
+
+                // 檢查是否時間到
+                if (remaining <= 0) {
+                    // 標記結束，避免重複觸發
+                    tab.endTime = null; 
+                    tab.finished = true; // 標記已完成當次倒數
+
+                    // 觸發 UI 變更 (X) 和 通知
+                    // 注意：這可能是在背景觸發，所以要用 tab.id 找元素
+                    const btnStep = getRunningStep(tab); // 輔助函數：找出現在跑到第幾王
+                    if (btnStep) {
+                        const btn = document.getElementById(`btn${btnStep}-${tab.id}`);
+                        markButtonAsFinished(btn);
+                        sendNotification(`[${tab.name}] 計時結束`, `${btnStep}王 時間到了！`);
+                    }
+                }
+            }
+        });
+    }
+
+    // 輔助：判斷現在是哪個按鈕正在跑 (根據按鈕鎖定狀態推斷)
+    function getRunningStep(tab) {
+        const btn1 = document.getElementById(`btn1-${tab.id}`);
+        const btn2 = document.getElementById(`btn2-${tab.id}`);
+        const btn3 = document.getElementById(`btn3-${tab.id}`);
+        
+        // 如果 3王解鎖且沒變X，那就是3王在跑
+        if (!btn3.disabled && !btn3.classList.contains('btn-timeout')) return 3;
+        // 如果 2王解鎖且沒變X，且3王還鎖著，那就是2王在跑
+        if (!btn2.disabled && !btn2.classList.contains('btn-timeout')) return 2;
+        // 同理 1王
+        if (!btn1.disabled && !btn1.classList.contains('btn-timeout')) return 1;
+        
+        return null;
+    }
+
+    /* =========================================
        [核心邏輯] 每日密碼
        ========================================= */
-    
     function initDailyPassword() {
         const savedData = localStorage.getItem(STORAGE_KEY_PWD);
         if (!savedData) return;
-
         try {
             const { refDate, refValue } = JSON.parse(savedData);
-            
-            const storedDate = new Date(refDate);
-            storedDate.setHours(0, 0, 0, 0);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
+            const storedDate = new Date(refDate); storedDate.setHours(0, 0, 0, 0);
+            const today = new Date(); today.setHours(0, 0, 0, 0);
             const diffTime = today - storedDate;
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
             if (diffDays === 0) {
                 document.getElementById('decimalInput').value = refValue;
             } else {
-                const minVal = 5;
-                const maxVal = 255;
-                const step = 5;
+                const minVal = 5; const maxVal = 255; const step = 5;
                 const totalSteps = ((maxVal - minVal) / step) + 1;
                 const refIndex = (refValue - minVal) / step;
                 let newIndex = (refIndex + diffDays) % totalSteps;
@@ -474,69 +530,38 @@
                 const todayValue = (newIndex * step) + minVal;
                 document.getElementById('decimalInput').value = todayValue;
             }
-            
             renderBinaryFromInput();
-        } catch (e) {
-            console.error("讀取密碼紀錄失敗", e);
-            localStorage.removeItem(STORAGE_KEY_PWD);
-        }
+        } catch (e) { localStorage.removeItem(STORAGE_KEY_PWD); }
     }
 
     function handleInputVisual() {
         const inputEl = document.getElementById('decimalInput');
         const errorEl = document.getElementById('errorMsg');
         const val = parseInt(inputEl.value, 10);
-
-        inputEl.classList.remove('invalid');
-        errorEl.innerText = "";
-
-        if (isNaN(val)) {
-            renderBinaryGrid("00000000");
-            return;
-        }
-
+        inputEl.classList.remove('invalid'); errorEl.innerText = "";
+        if (isNaN(val)) { renderBinaryGrid("00000000"); return; }
         if (val < 5 || val > 255 || val % 5 !== 0) {
-            inputEl.classList.add('invalid');
-            errorEl.innerText = "請輸入 5~255 之間且為 5 的倍數";
-            renderBinaryGrid("00000000");
-            return;
+            inputEl.classList.add('invalid'); errorEl.innerText = "請輸入 5~255 之間且為 5 的倍數";
+            renderBinaryGrid("00000000"); return;
         }
-
         renderBinaryFromInput();
     }
 
     function handleInputSave() {
         const inputEl = document.getElementById('decimalInput');
         const val = parseInt(inputEl.value, 10);
-
-        if (isNaN(val) || val < 5 || val > 255 || val % 5 !== 0) {
-            return;
-        }
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const dataToSave = {
-            refDate: today.toISOString(),
-            refValue: val
-        };
+        if (isNaN(val) || val < 5 || val > 255 || val % 5 !== 0) return;
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const dataToSave = { refDate: today.toISOString(), refValue: val };
         localStorage.setItem(STORAGE_KEY_PWD, JSON.stringify(dataToSave));
-
         showSaveMessage();
     }
 
     function showSaveMessage() {
         const msgEl = document.getElementById('saveMsg');
-        
-        if (saveMsgTimeout) {
-            clearTimeout(saveMsgTimeout);
-        }
-
+        if (saveMsgTimeout) clearTimeout(saveMsgTimeout);
         msgEl.classList.add('show');
-
-        saveMsgTimeout = setTimeout(() => {
-            msgEl.classList.remove('show');
-        }, 3000);
+        saveMsgTimeout = setTimeout(() => { msgEl.classList.remove('show'); }, 3000);
     }
 
     function renderBinaryFromInput() {
@@ -568,14 +593,8 @@
         }
     }
 
-    /* =========================================
-       標題閃爍與通知
-       ========================================= */
     function stopTitleBlink() {
-        if (blinkInterval) {
-            clearInterval(blinkInterval);
-            blinkInterval = null;
-        }
+        if (blinkInterval) { clearInterval(blinkInterval); blinkInterval = null; }
         document.title = originalTitle;
     }
 
@@ -596,18 +615,12 @@
                 icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png" 
             });
             notification.onclick = function() {
-                window.focus();
-                notification.close();
-                stopTitleBlink();
+                window.focus(); notification.close(); stopTitleBlink();
             };
-        } else {
-            setTimeout(() => alert(`${title}\n${body}`), 100);
-        }
+        } else { setTimeout(() => alert(`${title}\n${body}`), 100); }
     }
 
-    window.onclick = function() {
-        stopTitleBlink();
-    };
+    window.onclick = function() { stopTitleBlink(); };
 
     /* =========================================
        多頁籤系統
@@ -624,12 +637,8 @@
                 tabCounter = maxId;
                 parsedTabs.forEach(t => createTab(t.id, t.name));
                 switchTab(parsedTabs[0].id);
-            } else {
-                addNewTab();
-            }
-        } else {
-            addNewTab();
-        }
+            } else { addNewTab(); }
+        } else { addNewTab(); }
     }
 
     function saveTabsToStorage() {
@@ -637,22 +646,15 @@
         localStorage.setItem(STORAGE_KEY_TABS, JSON.stringify(dataToSave));
     }
 
-    // 新增：顯示分頁儲存提示 (會找到當前 active 的分頁並顯示)
     function showTabSaveFeedback() {
         const activePane = document.querySelector('.tab-pane.active');
         if (!activePane) return;
-
         const msgEl = activePane.querySelector('.tab-save-msg');
         if (!msgEl) return;
-
-        // 如果有舊的 timeout 先清除，避免閃爍
         if (msgEl.hideTimeout) clearTimeout(msgEl.hideTimeout);
-
         msgEl.classList.add('show');
-
         msgEl.hideTimeout = setTimeout(() => {
-            msgEl.classList.remove('show');
-            msgEl.hideTimeout = null;
+            msgEl.classList.remove('show'); msgEl.hideTimeout = null;
         }, 3000);
     }
 
@@ -661,15 +663,15 @@
         createTab(tabCounter, `角色 ${tabCounter}`);
         saveTabsToStorage();
         switchTab(tabCounter);
-        showTabSaveFeedback(); // 顯示提示
+        showTabSaveFeedback();
     }
 
     function createTab(id, name) {
         const newTab = {
             id: id,
             name: name,
-            interval: null,
-            remainingTime: 0
+            endTime: null,
+            finished: false
         };
         tabs.push(newTab);
 
@@ -678,10 +680,7 @@
         const tabBtn = document.createElement('div');
         tabBtn.className = 'tab-btn';
         tabBtn.id = `tab-btn-${id}`;
-        tabBtn.onclick = (e) => {
-            if(e.target.classList.contains('tab-close')) return;
-            switchTab(id);
-        };
+        tabBtn.onclick = (e) => { if(e.target.classList.contains('tab-close')) return; switchTab(id); };
         tabBtn.ondblclick = () => renameTab(id);
         tabBtn.innerHTML = `<span id="tab-name-${id}">${name}</span><span class="tab-close" onclick="removeTab(${id})">✕</span>`;
         headerContainer.insertBefore(tabBtn, addBtn);
@@ -691,43 +690,30 @@
         pane.className = 'tab-pane';
         pane.id = `tab-pane-${id}`;
         
-        // 新增：全部重置按鈕下方加入了 tab-save-msg
         pane.innerHTML = `
             <div class="timer-display" id="timer-display-${id}">00:00</div>
-            
             <div class="controls-wrapper">
                 <div class="btn-group">
-                    <!-- 1王 -->
                     <div class="btn-column">
                         <button class="timer-btn" id="btn1-${id}" onclick="startTabTimer(${id}, 160, 1)">
-                            <span class="btn-title">1王</span>
-                            <span class="btn-subtitle">(2分40秒)</span>
+                            <span class="btn-title">1王</span><span class="btn-subtitle">(2分40秒)</span>
                         </button>
                         <button class="btn-sub-reset" id="sub-reset-btn1-${id}" onclick="individualReset(${id}, 1)" disabled>重置</button>
                     </div>
-                    
-                    <!-- 2王 -->
                     <div class="btn-column">
                         <button class="timer-btn" id="btn2-${id}" onclick="startTabTimer(${id}, 80, 2)" disabled>
-                            <span class="btn-title">2王</span>
-                            <span class="btn-subtitle">(1分20秒)</span>
+                            <span class="btn-title">2王</span><span class="btn-subtitle">(1分20秒)</span>
                         </button>
                         <button class="btn-sub-reset" id="sub-reset-btn2-${id}" onclick="individualReset(${id}, 2)" disabled>重置</button>
                     </div>
-                    
-                    <!-- 3王 -->
                     <div class="btn-column">
                         <button class="timer-btn" id="btn3-${id}" onclick="startTabTimer(${id}, 160, 3)" disabled>
-                            <span class="btn-title">3王</span>
-                            <span class="btn-subtitle">(2分40秒)</span>
+                            <span class="btn-title">3王</span><span class="btn-subtitle">(2分40秒)</span>
                         </button>
                         <button class="btn-sub-reset" id="sub-reset-btn3-${id}" onclick="individualReset(${id}, 3)" disabled>重置</button>
                     </div>
                 </div>
-
-                <!-- 全部重置按鈕 -->
                 <button class="btn-reset" onclick="resetTabTimer(${id})">全部重置</button>
-                <!-- 儲存提示文字 -->
                 <div id="tab-save-msg-${id}" class="tab-save-msg">(已儲存)</div>
             </div>
         `;
@@ -739,24 +725,22 @@
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         const btn = document.getElementById(`tab-btn-${id}`);
         const pane = document.getElementById(`tab-pane-${id}`);
-        if(btn && pane) {
-            btn.classList.add('active');
-            pane.classList.add('active');
-        }
+        if(btn && pane) { btn.classList.add('active'); pane.classList.add('active'); }
     }
 
     function removeTab(id) {
         if(!confirm('確定要刪除這個分頁嗎？')) return;
         const targetTab = tabs.find(t => t.id === id);
-        if(targetTab && targetTab.interval) clearInterval(targetTab.interval);
+        // 不再需要 clearInterval，因為現在是統一由 Worker 管理，只需設為 null
+        targetTab.endTime = null; 
+        
         document.getElementById(`tab-btn-${id}`).remove();
         document.getElementById(`tab-pane-${id}`).remove();
         tabs = tabs.filter(t => t.id !== id);
         saveTabsToStorage();
         if (tabs.length > 0) switchTab(tabs[tabs.length - 1].id);
         else addNewTab();
-        
-        showTabSaveFeedback(); // 顯示提示 (在刪除後切換到的分頁上顯示)
+        showTabSaveFeedback();
     }
 
     function renameTab(id) {
@@ -767,23 +751,16 @@
             tabData.name = newName;
             document.getElementById(`tab-name-${id}`).innerText = newName;
             saveTabsToStorage();
-            showTabSaveFeedback(); // 顯示提示
+            showTabSaveFeedback();
         }
     }
-
-    /* =========================================
-       計時與邏輯控制
-       ========================================= */
 
     function markButtonAsFinished(btnElement) {
         if (!btnElement) return;
         btnElement.classList.add('btn-timeout');
         btnElement.innerHTML = 'X';
-        
         const resetBtn = btnElement.parentNode.querySelector('.btn-sub-reset');
-        if(resetBtn) {
-            resetBtn.disabled = false;
-        }
+        if(resetBtn) resetBtn.disabled = false;
     }
 
     function restoreButtonState(btnElement, title, subtitle) {
@@ -792,6 +769,7 @@
         btnElement.innerHTML = `<span class="btn-title">${title}</span><span class="btn-subtitle">${subtitle}</span>`;
     }
 
+    // 啟動計時 (設定目標時間)
     function startTabTimer(tabId, seconds, btnStep) {
         const tabData = tabs.find(t => t.id === tabId);
         if (!tabData) return;
@@ -804,48 +782,30 @@
         if (btnStep === 2 && btn2.disabled) return;
         if (btnStep === 3 && btn3.disabled) return;
 
-        if(tabData.interval) clearInterval(tabData.interval);
-
         document.getElementById(`sub-reset-btn${btnStep}-${tabId}`).disabled = false;
 
         if (btnStep === 1) {
-            btn1.disabled = true;
-            btn2.disabled = false;
+            btn1.disabled = true; btn2.disabled = false;
         } else if (btnStep === 2) {
-            markButtonAsFinished(btn1); 
-            btn2.disabled = true;
-            btn3.disabled = false;
+            markButtonAsFinished(btn1); btn2.disabled = true; btn3.disabled = false;
         } else if (btnStep === 3) {
-            markButtonAsFinished(btn1); 
-            markButtonAsFinished(btn2); 
-            btn3.disabled = true;
+            markButtonAsFinished(btn1); markButtonAsFinished(btn2); btn3.disabled = true;
         }
 
-        tabData.remainingTime = seconds;
-        updateDisplay(display, tabData.remainingTime);
+        // 設定目標時間 (timestamp)
+        tabData.endTime = Date.now() + (seconds * 1000);
+        tabData.finished = false; // 重置完成狀態
 
-        tabData.interval = setInterval(() => {
-            tabData.remainingTime--;
-            if (tabData.remainingTime >= 0) {
-                updateDisplay(display, tabData.remainingTime);
-            } else {
-                clearInterval(tabData.interval);
-                tabData.interval = null;
-                
-                const currentBtn = document.getElementById(`btn${btnStep}-${tabId}`);
-                markButtonAsFinished(currentBtn);
-
-                sendNotification(`[${tabData.name}] 計時結束`, `${btnStep}王 時間到了！`);
-            }
-        }, 1000);
+        updateDisplay(display, seconds);
     }
 
     function individualReset(tabId, btnStep) {
         const tabData = tabs.find(t => t.id === tabId);
         if (!tabData) return;
 
-        if(tabData.interval) clearInterval(tabData.interval);
-        tabData.interval = null;
+        // 清除目標時間 (停止計時)
+        tabData.endTime = null;
+        
         document.getElementById(`timer-display-${tabId}`).innerText = "00:00";
 
         const btn1 = document.getElementById(`btn1-${tabId}`);
@@ -856,28 +816,14 @@
         if(currentResetBtn) currentResetBtn.disabled = true;
 
         if (btnStep === 1) {
-            restoreButtonState(btn1, "1王", "(2分40秒)");
-            btn1.disabled = false;
-
-            restoreButtonState(btn2, "2王", "(1分20秒)");
-            btn2.disabled = true;
-            document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
-
-            restoreButtonState(btn3, "3王", "(2分40秒)");
-            btn3.disabled = true;
-            document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
-
+            restoreButtonState(btn1, "1王", "(2分40秒)"); btn1.disabled = false;
+            restoreButtonState(btn2, "2王", "(1分20秒)"); btn2.disabled = true; document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
+            restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = true; document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
         } else if (btnStep === 2) {
-            restoreButtonState(btn2, "2王", "(1分20秒)");
-            btn2.disabled = false;
-
-            restoreButtonState(btn3, "3王", "(2分40秒)");
-            btn3.disabled = true;
-            document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
-
+            restoreButtonState(btn2, "2王", "(1分20秒)"); btn2.disabled = false;
+            restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = true; document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
         } else if (btnStep === 3) {
-            restoreButtonState(btn3, "3王", "(2分40秒)");
-            btn3.disabled = false; 
+            restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = false; 
         }
     }
 
@@ -885,23 +831,16 @@
         const tabData = tabs.find(t => t.id === tabId);
         if (!tabData) return;
 
-        if(tabData.interval) clearInterval(tabData.interval);
-        tabData.interval = null;
-        tabData.remainingTime = 0;
+        tabData.endTime = null;
         document.getElementById(`timer-display-${tabId}`).innerText = "00:00";
 
         const btn1 = document.getElementById(`btn1-${tabId}`);
         const btn2 = document.getElementById(`btn2-${tabId}`);
         const btn3 = document.getElementById(`btn3-${tabId}`);
 
-        restoreButtonState(btn1, "1王", "(2分40秒)");
-        btn1.disabled = false;
-
-        restoreButtonState(btn2, "2王", "(1分20秒)");
-        btn2.disabled = true;
-
-        restoreButtonState(btn3, "3王", "(2分40秒)");
-        btn3.disabled = true;
+        restoreButtonState(btn1, "1王", "(2分40秒)"); btn1.disabled = false;
+        restoreButtonState(btn2, "2王", "(1分20秒)"); btn2.disabled = true;
+        restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = true;
 
         document.getElementById(`sub-reset-btn1-${tabId}`).disabled = true;
         document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
@@ -911,6 +850,7 @@
     }
 
     function updateDisplay(element, seconds) {
+        if (seconds < 0) seconds = 0;
         const minutes = Math.floor(seconds / 60);
         const secs = seconds % 60;
         element.innerText = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
