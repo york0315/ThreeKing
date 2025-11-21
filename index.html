@@ -32,6 +32,7 @@
             margin: 0;
             background-color: #f0f2f5;
             padding: 20px;
+            padding-bottom: 50px; /* 預留底部空間 */
         }
 
         h1 {
@@ -77,307 +78,167 @@
             gap: 10px;               
         }
 
+        /* --- 提示文字 --- */
         .save-msg {
-            font-size: 0.85rem;        
-            color: var(--info-gray);   
-            font-weight: normal;
-            height: 20px;              
-            margin-bottom: 15px;       
-            opacity: 0;                
-            transition: opacity 0.5s ease; 
+            font-size: 0.85rem; color: var(--info-gray); font-weight: normal;
+            height: 20px; margin-bottom: 15px; opacity: 0; transition: opacity 0.5s ease; 
         }
         .save-msg.show { opacity: 1; }
 
         .tab-save-msg {
-            font-size: 0.85rem;
-            color: var(--info-gray);
-            font-weight: normal;
-            height: 20px;
-            margin-top: 5px;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            align-self: flex-end; 
-            width: auto;
-            text-align: right;
-            padding-right: 5px;
+            font-size: 0.85rem; color: var(--info-gray); font-weight: normal;
+            height: 20px; margin-top: 5px; opacity: 0; transition: opacity 0.5s ease;
+            align-self: flex-end; width: auto; text-align: right; padding-right: 5px;
         }
         .tab-save-msg.show { opacity: 1; }
 
+        /* --- 輸入框與二進位 --- */
         .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
+            display: flex; flex-direction: column; gap: 15px; align-items: center;
         }
-
         input[type="number"] {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 80%;
-            text-align: center;
-            font-weight: bold;
-            color: #2c3e50;
+            padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px;
+            width: 80%; text-align: center; font-weight: bold; color: #2c3e50;
         }
-        
-        input[type="number"].invalid {
-            border-color: #e74c3c;
-            background-color: #fdecec;
-        }
-
-        .error-msg {
-            color: #e74c3c;
-            font-size: 12px;
-            height: 15px;
-            margin-top: -10px;
-        }
+        input[type="number"].invalid { border-color: #e74c3c; background-color: #fdecec; }
+        .error-msg { color: #e74c3c; font-size: 12px; height: 15px; margin-top: -10px; }
 
         .binary-container {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin-top: 10px;
-            flex-wrap: wrap;
+            display: flex; justify-content: center; gap: 5px; margin-top: 10px; flex-wrap: wrap;
         }
-
-        .bit-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 35px;
-        }
-
-        .bit-label {
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 2px;
-        }
-
+        .bit-box { display: flex; flex-direction: column; align-items: center; width: 35px; }
+        .bit-label { font-size: 12px; color: #888; margin-bottom: 2px; }
         .bit-value {
-            width: 35px;
-            height: 45px;
-            line-height: 45px;
-            border: 2px solid var(--box-border);
-            border-radius: 5px;
-            font-size: 20px;
-            font-weight: bold;
-            background-color: white;
-            color: var(--primary-color);
-            transition: all 0.3s;
+            width: 35px; height: 45px; line-height: 45px; border: 2px solid var(--box-border);
+            border-radius: 5px; font-size: 20px; font-weight: bold; background-color: white;
+            color: var(--primary-color); transition: all 0.3s;
         }
-        
-        .bit-value.active {
-            border-color: var(--primary-color);
-            background-color: #ebf5ff;
-        }
+        .bit-value.active { border-color: var(--primary-color); background-color: #ebf5ff; }
 
+        /* --- 分頁籤 --- */
         .tabs-header {
-            display: flex;
-            overflow-x: auto;
-            background: #ddd;
-            border-radius: 10px 10px 0 0;
-            padding: 5px 5px 0 5px;
-            gap: 5px;
+            display: flex; overflow-x: auto; background: #ddd; border-radius: 10px 10px 0 0;
+            padding: 5px 5px 0 5px; gap: 5px;
         }
-
         .tab-btn {
-            padding: 10px 15px;
-            background: var(--tab-inactive);
-            border: none;
-            border-radius: 10px 10px 0 0;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 80px;
-            justify-content: space-between;
-            transition: background 0.2s;
-            white-space: nowrap;
+            padding: 10px 15px; background: var(--tab-inactive); border: none; border-radius: 10px 10px 0 0;
+            cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
+            min-width: 80px; justify-content: space-between; transition: background 0.2s; white-space: nowrap;
         }
-
-        .tab-btn.active {
-            background: white;
-            color: var(--primary-color);
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
-        }
-
-        .tab-close {
-            font-size: 12px;
-            color: #999;
-            padding: 2px 6px;
-            border-radius: 50%;
-        }
-
-        .tab-close:hover {
-            background: #ffcccc;
-            color: #d00;
-        }
-
+        .tab-btn.active { background: white; color: var(--primary-color); box-shadow: 0 -2px 5px rgba(0,0,0,0.05); }
+        .tab-close { font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; }
+        .tab-close:hover { background: #ffcccc; color: #d00; }
         .add-tab-btn {
-            padding: 5px 15px;
-            font-size: 20px;
-            background: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: auto;
+            padding: 5px 15px; font-size: 20px; background: #4a90e2; color: white;
+            border: none; border-radius: 5px; cursor: pointer; margin-left: auto;
         }
         
         .tab-content-wrapper {
-            background: white;
-            border-radius: 0 0 15px 15px;
-            padding: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            min-height: 300px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: white; border-radius: 0 0 15px 15px; padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 300px;
+            display: flex; flex-direction: column; align-items: center;
         }
+        .tab-pane { display: none; width: 100%; animation: fadeIn 0.3s; }
+        .tab-pane.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .tab-pane {
-            display: none;
-            width: 100%;
-            animation: fadeIn 0.3s;
-        }
-
-        .tab-pane.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
+        /* --- 計時器 UI --- */
         .timer-display {
-            font-size: 3.5rem;
-            font-family: 'Courier New', Courier, monospace;
-            margin: 15px 0;
-            color: #333;
-            font-weight: bold;
-            text-align: center;
+            font-size: 3.5rem; font-family: 'Courier New', Courier, monospace; margin: 15px 0;
+            color: #333; font-weight: bold; text-align: center;
         }
-
         .controls-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
+            display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto;
         }
-
         .btn-group {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin-bottom: 10px;
-            gap: 10px;
+            display: flex; justify-content: space-between; width: 100%; margin-bottom: 10px; gap: 10px;
         }
-
-        .btn-column {
-            display: flex;
-            flex-direction: column;
-            width: 32%;
-            gap: 10px;
-        }
-
+        .btn-column { display: flex; flex-direction: column; width: 32%; gap: 10px; }
         .timer-btn {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 8px 5px; border: none; border-radius: 5px; cursor: pointer; transition: all 0.2s;
+            background-color: var(--primary-color); color: white; width: 100%; height: 70px; 
+        }
+        .timer-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .timer-btn:disabled { background-color: var(--disabled-color); color: #888; cursor: not-allowed; transform: none; opacity: 0.8; }
+        .timer-btn.btn-timeout {
+            background-color: var(--timeout-color) !important; color: white !important;
+            font-size: 2rem; font-weight: 900; opacity: 1 !important; cursor: not-allowed;
+        }
+        .btn-title { font-size: 1.2rem; font-weight: bold; line-height: 1.2; }
+        .btn-subtitle { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 2px; }
+        .btn-sub-reset {
+            background-color: white; border: 1px solid var(--sub-reset-color); color: var(--sub-reset-color);
+            padding: 5px 0; border-radius: 5px; font-size: 12px; cursor: pointer; transition: all 0.2s; width: 100%;
+        }
+        .btn-sub-reset:hover:not(:disabled) { background-color: var(--sub-reset-color); color: white; }
+        .btn-sub-reset:disabled { border-color: #e0e0e0; color: #ccc; background-color: transparent; cursor: not-allowed; opacity: 0.5; }
+        .btn-reset {
+            background-color: var(--reset-color); color: white; border: none; padding: 8px 20px; 
+            border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; align-self: flex-end; width: auto; margin-top: 20px;
+        }
+        .btn-reset:hover { background-color: #c0392b; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* --- 新增：設定區塊樣式 (v20) --- */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .setting-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 8px 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background-color: var(--primary-color);
-            color: white;
-            width: 100%;
-            height: 70px; 
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #eee;
         }
-
-        .timer-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        .setting-item label {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
-
-        .timer-btn:disabled {
-            background-color: var(--disabled-color);
-            color: #888;
-            cursor: not-allowed;
-            transform: none;
-            opacity: 0.8;
+        .setting-input {
+            width: 80%;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         
-        .timer-btn.btn-timeout {
-            background-color: var(--timeout-color) !important;
-            color: white !important;
-            font-size: 2rem;
-            font-weight: 900;
-            opacity: 1 !important;
-            cursor: not-allowed;
-        }
-
-        .btn-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            line-height: 1.2;
-        }
-
-        .btn-subtitle {
-            font-size: 0.8rem;
-            font-weight: normal;
-            opacity: 0.9;
-            margin-top: 2px;
-        }
-
-        .btn-sub-reset {
-            background-color: white;
-            border: 1px solid var(--sub-reset-color);
-            color: var(--sub-reset-color);
-            padding: 5px 0;
-            border-radius: 5px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
+        .options-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
             width: 100%;
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+            margin-top: 10px;
         }
-
-        .btn-sub-reset:hover:not(:disabled) {
-            background-color: var(--sub-reset-color);
-            color: white;
-        }
-
-        .btn-sub-reset:disabled {
-            border-color: #e0e0e0;
-            color: #ccc;
-            background-color: transparent;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        .btn-reset {
-            background-color: var(--reset-color);
-            color: white;
-            border: none;
-            padding: 8px 20px; 
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: bold;
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
-            align-self: flex-end; 
-            width: auto;          
-            margin-top: 20px;
+            user-select: none;
         }
-
-        .btn-reset:hover {
-            background-color: #c0392b;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        .checkbox-wrapper input[type="checkbox"] {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        .checkbox-wrapper.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .permission-hint {
+            color: var(--reset-color);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
         }
 
     </style>
@@ -410,56 +271,177 @@
         </div>
     </div>
 
+    <!-- 新增：設定區塊 (v20) -->
+    <div class="container">
+        <h2>內容設定</h2>
+        
+        <!-- 1. 時間調整 -->
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label>1王 (秒)</label>
+                <input type="number" id="conf-d1" class="setting-input" value="150" onchange="saveSettings()">
+            </div>
+            <div class="setting-item">
+                <label>2王 (秒)</label>
+                <input type="number" id="conf-d2" class="setting-input" value="80" onchange="saveSettings()">
+            </div>
+            <div class="setting-item">
+                <label>3王 (秒)</label>
+                <input type="number" id="conf-d3" class="setting-input" value="160" onchange="saveSettings()">
+            </div>
+        </div>
+
+        <!-- 2 & 3. 功能勾選 -->
+        <div class="options-row">
+            <label class="checkbox-wrapper">
+                <input type="checkbox" id="conf-auto-next" onchange="handleAutoNextChange()">
+                自動下一關
+            </label>
+
+            <label class="checkbox-wrapper" id="lbl-notify">
+                <input type="checkbox" id="conf-notify" checked onchange="saveSettings()">
+                顯示系統通知
+            </label>
+        </div>
+        
+        <!-- 權限提示文字 -->
+        <div id="perm-hint" class="permission-hint">
+            ⚠️ 系統通知已被封鎖，請點擊網址列鎖頭圖示開啟權限。
+        </div>
+    </div>
+
 </div>
 
 <script>
     const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v16'; 
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
+    const STORAGE_KEY_CONF = 'dailyKingSettings_v1'; // 新增：設定儲存 Key
 
     let notificationPermission = "default";
     let blinkInterval = null; 
     let saveMsgTimeout = null; 
     const originalTitle = document.title;
 
+    // 預設設定值
+    let globalConfig = {
+        d1: 150,
+        d2: 80,
+        d3: 160,
+        autoNext: false,
+        notify: true
+    };
+
     // --- Web Worker ---
     const workerBlob = new Blob([`
-        setInterval(() => {
-            postMessage('tick');
-        }, 250);
+        setInterval(() => { postMessage('tick'); }, 250);
     `], { type: 'application/javascript' });
-    
     const workerUrl = URL.createObjectURL(workerBlob);
     const timerWorker = new Worker(workerUrl);
 
     timerWorker.onmessage = function(e) {
-        if (e.data === 'tick') {
-            checkAllTimers(); 
-        }
+        if (e.data === 'tick') checkAllTimers(); 
     };
 
     window.onload = function() {
         renderBinaryGrid("00000000");
         initDailyPassword();
+        loadSettings(); // 載入設定
         loadTabsFromStorage();
         
-        if ("Notification" in window) {
-            notificationPermission = Notification.permission;
-            if (notificationPermission === "default") {
-                Notification.requestPermission().then(permission => {
-                    notificationPermission = permission;
-                });
-            }
-        }
+        checkNotificationPermission();
     };
 
     window.addEventListener('focus', () => {
-        if ('clearAppBadge' in navigator) {
-            navigator.clearAppBadge().catch(e => console.log(e));
-        }
+        if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(e => console.log(e));
     });
 
     /* =========================================
-       [核心修正] 全域計時檢查
+       [新功能] 設定存取與邏輯
+       ========================================= */
+    function loadSettings() {
+        const savedConf = localStorage.getItem(STORAGE_KEY_CONF);
+        if (savedConf) {
+            globalConfig = { ...globalConfig, ...JSON.parse(savedConf) };
+        }
+        // 填入 UI
+        document.getElementById('conf-d1').value = globalConfig.d1;
+        document.getElementById('conf-d2').value = globalConfig.d2;
+        document.getElementById('conf-d3').value = globalConfig.d3;
+        document.getElementById('conf-auto-next').checked = globalConfig.autoNext;
+        document.getElementById('conf-notify').checked = globalConfig.notify;
+
+        // 初始化 UI 狀態
+        handleAutoNextChange(false); // false 代表不存檔，只更新 UI
+    }
+
+    function saveSettings() {
+        globalConfig.d1 = parseInt(document.getElementById('conf-d1').value) || 150;
+        globalConfig.d2 = parseInt(document.getElementById('conf-d2').value) || 80;
+        globalConfig.d3 = parseInt(document.getElementById('conf-d3').value) || 160;
+        globalConfig.autoNext = document.getElementById('conf-auto-next').checked;
+        globalConfig.notify = document.getElementById('conf-notify').checked;
+
+        localStorage.setItem(STORAGE_KEY_CONF, JSON.stringify(globalConfig));
+        
+        // 設定變更後，即時更新按鈕上的文字 (若頁籤已存在)
+        updateAllButtonLabels();
+    }
+
+    function handleAutoNextChange(shouldSave = true) {
+        const isAuto = document.getElementById('conf-auto-next').checked;
+        const notifyCb = document.getElementById('conf-notify');
+        const notifyLbl = document.getElementById('lbl-notify');
+
+        // 邏輯：如果勾選自動下一關，則強制關閉並鎖定通知
+        if (isAuto) {
+            notifyCb.disabled = true;
+            notifyLbl.classList.add('disabled');
+            // 這裡不改變 notifyCb.checked 的值，只禁用，方便使用者取消自動後恢復原狀
+        } else {
+            notifyCb.disabled = false;
+            notifyLbl.classList.remove('disabled');
+        }
+
+        if (shouldSave) saveSettings();
+    }
+
+    function checkNotificationPermission() {
+        if (!("Notification" in window)) return;
+        
+        if (Notification.permission === "denied") {
+            document.getElementById('perm-hint').style.display = 'block';
+        } else if (Notification.permission === "default") {
+            Notification.requestPermission().then(permission => {
+                notificationPermission = permission;
+                if (permission === "denied") {
+                    document.getElementById('perm-hint').style.display = 'block';
+                }
+            });
+        }
+    }
+
+    // 輔助：格式化秒數為文字 (例如 150 -> 2分30秒)
+    function formatTimeText(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `(${m}分${s}秒)`;
+    }
+
+    // 輔助：更新所有分頁按鈕的文字
+    function updateAllButtonLabels() {
+        tabs.forEach(tab => {
+            const btn1 = document.getElementById(`btn1-${tab.id}`);
+            const btn2 = document.getElementById(`btn2-${tab.id}`);
+            const btn3 = document.getElementById(`btn3-${tab.id}`);
+            
+            if (btn1) btn1.querySelector('.btn-subtitle').innerText = formatTimeText(globalConfig.d1);
+            if (btn2) btn2.querySelector('.btn-subtitle').innerText = formatTimeText(globalConfig.d2);
+            if (btn3) btn3.querySelector('.btn-subtitle').innerText = formatTimeText(globalConfig.d3);
+        });
+    }
+
+    /* =========================================
+       [核心修正] 全域計時檢查 (整合自動下一關)
        ========================================= */
     function checkAllTimers() {
         const now = Date.now();
@@ -486,19 +468,37 @@
                         const btn = document.getElementById(`btn${btnStep}-${tab.id}`);
                         markButtonAsFinished(btn);
                         
-                        // 發送通知，並帶入 tab.id 與 結束的關卡(btnStep)
-                        sendNotification(
-                            `[${tab.name}] 計時結束`, 
-                            `${btnStep}王 時間到了！ (點擊開始下一關)`, 
-                            tab.id, 
-                            btnStep
-                        );
+                        tab.currentStep = null;
+
+                        // --- v20 核心邏輯判斷 ---
+                        if (globalConfig.autoNext) {
+                            // 模式 A: 自動下一關 (靜音、自動觸發)
+                            const nextStep = btnStep + 1;
+                            if (nextStep <= 3) {
+                                const nextBtn = document.getElementById(`btn${nextStep}-${tab.id}`);
+                                if (nextBtn && !nextBtn.disabled) {
+                                    // 稍微延遲 0.5秒 再按，比較自然
+                                    setTimeout(() => nextBtn.click(), 500);
+                                }
+                            } else {
+                                // 3王結束，沒有下一關了，發個通知
+                                sendNotification(`[${tab.name}]`, `全部通關完成！`, null, null);
+                            }
+                        } else {
+                            // 模式 B: 手動下一關 (發通知)
+                            if (globalConfig.notify) {
+                                sendNotification(
+                                    `[${tab.name}] 計時結束`, 
+                                    `${btnStep}王 時間到了！ (點擊開始下一關)`, 
+                                    tab.id, 
+                                    btnStep
+                                );
+                            }
+                        }
                         
                         if ('setAppBadge' in navigator) {
                             navigator.setAppBadge(1).catch(e => console.log(e));
                         }
-
-                        tab.currentStep = null;
                     }
                 }
             }
@@ -506,45 +506,7 @@
     }
 
     /* =========================================
-       [新增功能] 點擊通知自動下一關的邏輯
-       ========================================= */
-    function sendNotification(title, body, tabId, finishedStep) {
-        startTitleBlink("【時間到！】" + title);
-        
-        if (Notification.permission === "granted") {
-            const notification = new Notification(title, {
-                body: body,
-                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png",
-                requireInteraction: true 
-            });
-
-            // --- 關鍵修改：通知點擊事件 ---
-            notification.onclick = function() {
-                window.focus(); 
-                notification.close(); 
-                stopTitleBlink();
-                if ('clearAppBadge' in navigator) navigator.clearAppBadge();
-
-                // 自動觸發下一關
-                if (tabId && finishedStep) {
-                    const nextStep = finishedStep + 1;
-                    // 只有當下一關是 2 或 3 時才觸發 (3王結束後沒有4王)
-                    if (nextStep <= 3) {
-                        const nextBtn = document.getElementById(`btn${nextStep}-${tabId}`);
-                        // 確保按鈕存在且可以點擊 (避免重複觸發)
-                        if (nextBtn && !nextBtn.disabled) {
-                            nextBtn.click(); // 模擬點擊按鈕
-                        }
-                    }
-                }
-            };
-        } else { 
-            setTimeout(() => alert(`${title}\n${body}`), 100); 
-        }
-    }
-
-    /* =========================================
-       [核心邏輯] 每日密碼
+       [功能] 每日密碼
        ========================================= */
     function initDailyPassword() {
         const savedData = localStorage.getItem(STORAGE_KEY_PWD);
@@ -643,6 +605,39 @@
         }, 1000); 
     }
 
+    function sendNotification(title, body, tabId, finishedStep) {
+        startTitleBlink("【時間到！】" + title);
+        
+        if (Notification.permission === "granted") {
+            const notification = new Notification(title, {
+                body: body,
+                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png",
+                requireInteraction: true 
+            });
+
+            notification.onclick = function() {
+                window.focus(); 
+                notification.close(); 
+                stopTitleBlink();
+                if ('clearAppBadge' in navigator) navigator.clearAppBadge();
+
+                // 自動觸發下一關 (如果不是自動模式，且有點擊通知才做)
+                if (tabId && finishedStep && !globalConfig.autoNext) {
+                    const nextStep = finishedStep + 1;
+                    if (nextStep <= 3) {
+                        const nextBtn = document.getElementById(`btn${nextStep}-${tabId}`);
+                        if (nextBtn && !nextBtn.disabled) {
+                            nextBtn.click(); 
+                        }
+                    }
+                }
+            };
+        } else { 
+            // 如果被封鎖，只能用 alert
+            setTimeout(() => alert(`${title}\n${body}`), 100); 
+        }
+    }
+
     window.onclick = function() { stopTitleBlink(); };
 
     /* =========================================
@@ -714,25 +709,30 @@
         pane.className = 'tab-pane';
         pane.id = `tab-pane-${id}`;
         
+        // 動態產生文字
+        const t1 = formatTimeText(globalConfig.d1);
+        const t2 = formatTimeText(globalConfig.d2);
+        const t3 = formatTimeText(globalConfig.d3);
+
         pane.innerHTML = `
             <div class="timer-display" id="timer-display-${id}">00:00</div>
             <div class="controls-wrapper">
                 <div class="btn-group">
                     <div class="btn-column">
-                        <button class="timer-btn" id="btn1-${id}" onclick="startTabTimer(${id}, 150, 1)">
-                            <span class="btn-title">1王</span><span class="btn-subtitle">(2分30秒)</span>
+                        <button class="timer-btn" id="btn1-${id}" onclick="startTabTimer(${id}, globalConfig.d1, 1)">
+                            <span class="btn-title">1王</span><span class="btn-subtitle">${t1}</span>
                         </button>
                         <button class="btn-sub-reset" id="sub-reset-btn1-${id}" onclick="individualReset(${id}, 1)" disabled>重置</button>
                     </div>
                     <div class="btn-column">
-                        <button class="timer-btn" id="btn2-${id}" onclick="startTabTimer(${id}, 80, 2)" disabled>
-                            <span class="btn-title">2王</span><span class="btn-subtitle">(1分20秒)</span>
+                        <button class="timer-btn" id="btn2-${id}" onclick="startTabTimer(${id}, globalConfig.d2, 2)" disabled>
+                            <span class="btn-title">2王</span><span class="btn-subtitle">${t2}</span>
                         </button>
                         <button class="btn-sub-reset" id="sub-reset-btn2-${id}" onclick="individualReset(${id}, 2)" disabled>重置</button>
                     </div>
                     <div class="btn-column">
-                        <button class="timer-btn" id="btn3-${id}" onclick="startTabTimer(${id}, 160, 3)" disabled>
-                            <span class="btn-title">3王</span><span class="btn-subtitle">(2分40秒)</span>
+                        <button class="timer-btn" id="btn3-${id}" onclick="startTabTimer(${id}, globalConfig.d3, 3)" disabled>
+                            <span class="btn-title">3王</span><span class="btn-subtitle">${t3}</span>
                         </button>
                         <button class="btn-sub-reset" id="sub-reset-btn3-${id}" onclick="individualReset(${id}, 3)" disabled>重置</button>
                     </div>
@@ -839,15 +839,20 @@
         const currentResetBtn = document.getElementById(`sub-reset-btn${btnStep}-${tabId}`);
         if(currentResetBtn) currentResetBtn.disabled = true;
 
+        // 使用 globalConfig 的時間
+        const t1 = formatTimeText(globalConfig.d1);
+        const t2 = formatTimeText(globalConfig.d2);
+        const t3 = formatTimeText(globalConfig.d3);
+
         if (btnStep === 1) {
-            restoreButtonState(btn1, "1王", "(2分30秒)"); btn1.disabled = false;
-            restoreButtonState(btn2, "2王", "(1分20秒)"); btn2.disabled = true; document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
-            restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = true; document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
+            restoreButtonState(btn1, "1王", t1); btn1.disabled = false;
+            restoreButtonState(btn2, "2王", t2); btn2.disabled = true; document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
+            restoreButtonState(btn3, "3王", t3); btn3.disabled = true; document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
         } else if (btnStep === 2) {
-            restoreButtonState(btn2, "2王", "(1分20秒)"); btn2.disabled = false;
-            restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = true; document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
+            restoreButtonState(btn2, "2王", t2); btn2.disabled = false;
+            restoreButtonState(btn3, "3王", t3); btn3.disabled = true; document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
         } else if (btnStep === 3) {
-            restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = false; 
+            restoreButtonState(btn3, "3王", t3); btn3.disabled = false; 
         }
     }
 
@@ -863,9 +868,13 @@
         const btn2 = document.getElementById(`btn2-${tabId}`);
         const btn3 = document.getElementById(`btn3-${tabId}`);
 
-        restoreButtonState(btn1, "1王", "(2分30秒)"); btn1.disabled = false;
-        restoreButtonState(btn2, "2王", "(1分20秒)"); btn2.disabled = true;
-        restoreButtonState(btn3, "3王", "(2分40秒)"); btn3.disabled = true;
+        const t1 = formatTimeText(globalConfig.d1);
+        const t2 = formatTimeText(globalConfig.d2);
+        const t3 = formatTimeText(globalConfig.d3);
+
+        restoreButtonState(btn1, "1王", t1); btn1.disabled = false;
+        restoreButtonState(btn2, "2王", t2); btn2.disabled = true;
+        restoreButtonState(btn3, "3王", t3); btn3.disabled = true;
 
         document.getElementById(`sub-reset-btn1-${tabId}`).disabled = true;
         document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
