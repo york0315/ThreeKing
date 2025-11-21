@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>每日三王計時器</title>
+    
+    <!-- 新增：網頁標題圖示 (Favicon)，與 manifest 使用同一張圖 -->
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/850/850960.png">
+    
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
@@ -410,7 +414,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v16'; // 版本更新
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v16'; 
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
 
     let notificationPermission = "default";
@@ -668,7 +672,6 @@
         pane.className = 'tab-pane';
         pane.id = `tab-pane-${id}`;
         
-        // --- 修改 1王 的時間為 150秒 (2分30秒) ---
         pane.innerHTML = `
             <div class="timer-display" id="timer-display-${id}">00:00</div>
             <div class="controls-wrapper">
