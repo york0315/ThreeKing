@@ -37,7 +37,6 @@
             padding-bottom: 80px;
         }
 
-        /* 標題 */
         h1 {
             color: #2c3e50;
             margin-bottom: 15px; 
@@ -80,6 +79,51 @@
         }
         #toast-notification.show { opacity: 1; transform: translateY(0); }
 
+        /* --- 自訂彈出視窗 (Modal) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* 半透明黑底 */
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000;
+            opacity: 0; visibility: hidden;
+            transition: all 0.2s;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            width: 300px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.2s;
+        }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+
+        .modal-content h3 { margin: 0 0 15px 0; color: #2c3e50; }
+        .modal-content p { margin: 0 0 10px 0; color: #555; font-size: 1rem; }
+        
+        .modal-content input {
+            width: 100%; padding: 8px; margin-bottom: 20px;
+            border: 1px solid #ddd; border-radius: 5px;
+            font-size: 16px; box-sizing: border-box;
+        }
+
+        .modal-buttons { display: flex; justify-content: center; gap: 10px; }
+        
+        .btn-modal {
+            padding: 8px 20px; border: none; border-radius: 5px;
+            cursor: pointer; font-weight: bold; font-size: 14px;
+        }
+        .btn-cancel { background: #e0e0e0; color: #333; }
+        .btn-confirm { background: var(--primary-color); color: white; }
+        .btn-cancel:hover { background: #d6d6d6; }
+        .btn-confirm:hover { background: #357abd; }
+
+
+        /* Input & UI */
         .input-group { display: flex; flex-direction: column; gap: 5px; align-items: center; }
 
         #decimalInput {
@@ -100,6 +144,7 @@
         .binary-container { display: flex; justify-content: center; gap: 5px; margin-top: 0; flex-wrap: wrap; }
         .bit-box { display: flex; flex-direction: column; align-items: center; width: 35px; }
         .bit-label { font-size: 12px; color: #888; margin-bottom: 2px; }
+        
         .bit-value {
             width: 35px; height: 45px; line-height: 45px; 
             border: 2px solid #bdc3c7; 
@@ -108,8 +153,7 @@
         }
         .bit-value.active { border-color: var(--primary-color); background-color: #ebf5ff; }
 
-        /* --- TAG 區塊重構 (v31) --- */
-        
+        /* TAG UI */
         .tab-content-wrapper {
             background: white; 
             border-radius: 15px 15px 0 0; 
@@ -121,7 +165,6 @@
             position: relative;
         }
 
-        /* 下方整體容器 (灰色背景) */
         .tabs-container { 
             display: flex; 
             background: var(--tab-bg); 
@@ -130,35 +173,18 @@
             padding: 8px 15px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
             align-items: center;
-            overflow: hidden; /* 防止子元素溢出 */
+            overflow: hidden; 
         }
 
-        /* 1. 捲動區域 (隱藏捲軸 + 拖曳) */
         .tabs-list {
-            display: flex;
-            overflow-x: auto;
-            gap: 8px;
-            flex-grow: 1; /* 佔據剩餘空間 */
-            cursor: grab; /* 手掌游標 */
-            
-            /* 隱藏捲軸 */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE 10+ */
-            padding-bottom: 0; /* 修正可能出現的捲軸高度 */
+            display: flex; overflow-x: auto; gap: 8px; flex-grow: 1; cursor: grab; 
+            scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 0; 
         }
-        .tabs-list::-webkit-scrollbar { 
-            display: none; /* Chrome/Safari */
-        }
-        .tabs-list.active {
-            cursor: grabbing; /* 拖曳時變緊抓 */
-        }
+        .tabs-list::-webkit-scrollbar { display: none; }
+        .tabs-list.active { cursor: grabbing; }
 
-        /* 2. 固定在右側的按鈕區 */
         .add-tab-wrapper {
-            margin-left: 10px;
-            flex-shrink: 0; /* 防止被壓縮 */
-            padding-left: 10px;
-            border-left: 1px solid #ccc; /* 分隔線 */
+            margin-left: 10px; flex-shrink: 0; padding-left: 10px; border-left: 1px solid #ccc; 
         }
 
         .tab-btn {
@@ -166,28 +192,21 @@
             background: var(--tab-inactive-bg); 
             border: 1px solid var(--tab-border); 
             border-radius: 20px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            color: #666;
+            cursor: pointer; font-weight: bold; color: #666;
             display: flex; align-items: center; gap: 8px;
-            min-width: auto; 
-            justify-content: center; 
-            transition: all 0.2s; 
-            white-space: nowrap;
-            user-select: none; /* 防止拖曳時選取文字 */
+            min-width: auto; justify-content: center; 
+            transition: all 0.2s; white-space: nowrap; user-select: none; 
         }
 
         .tab-btn.active { 
-            background: white; 
-            color: var(--primary-color); 
+            background: white; color: var(--primary-color); 
             border-color: var(--primary-color); 
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .tab-close { 
             font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; 
-            margin-left: 2px;
-            display: none; 
+            margin-left: 2px; display: none; 
         }
         .tab-btn.active .tab-close { display: inline-block; }
         .tab-close:hover { background: #ffcccc; color: #d00; }
@@ -300,6 +319,19 @@
 <!-- 全域漂浮通知 -->
 <div id="toast-notification">已儲存</div>
 
+<!-- 自訂彈出視窗 -->
+<div id="renameModal" class="modal-overlay" onclick="if(event.target===this) closeRenameModal()">
+    <div class="modal-content">
+        <h3>三王計時器</h3>
+        <p>請輸入新的角色名稱：</p>
+        <input type="text" id="renameInput" onkeydown="if(event.key==='Enter') confirmRename()">
+        <div class="modal-buttons">
+            <button class="btn-modal btn-cancel" onclick="closeRenameModal()">取消</button>
+            <button class="btn-modal btn-confirm" onclick="confirmRename()">確定</button>
+        </div>
+    </div>
+</div>
+
 <h1>
     <img src="https://cdn-icons-png.flaticon.com/512/850/850960.png" alt="Logo">
     三王計時器
@@ -325,13 +357,10 @@
             <!-- JS 動態內容 -->
         </div>
         
-        <!-- v31 結構變更：分離 Scroll 區與按鈕區 -->
         <div class="tabs-container">
-            <!-- 1. 可捲動的分頁列表 -->
             <div class="tabs-list" id="tabsList">
                 <!-- JS 動態插入 -->
             </div>
-            <!-- 2. 固定的新增按鈕 -->
             <div class="add-tab-wrapper">
                 <button class="add-tab-btn" onclick="addNewTab()">+</button>
             </div>
@@ -397,6 +426,9 @@
     let toastTimeout = null; 
     const originalTitle = document.title;
     let deferredPrompt;
+    
+    // Modal 變數
+    let currentRenamingId = null;
 
     let globalConfig = {
         d1: 150, d2: 80, d3: 160,
@@ -436,12 +468,44 @@
         loadSettings();
         loadTabsFromStorage();
         checkNotificationPermission();
-        
-        // 啟用拖曳功能
         enableDragScroll();
     };
 
-    /* --- 2. 拖曳捲動邏輯 --- */
+    /* --- 自訂 Modal 邏輯 --- */
+    function openRenameModal(id) {
+        const tabData = tabs.find(t => t.id === id);
+        if (!tabData) return;
+        
+        currentRenamingId = id;
+        const input = document.getElementById('renameInput');
+        input.value = tabData.name;
+        
+        document.getElementById('renameModal').classList.add('show');
+        setTimeout(() => input.focus(), 100); // 延遲聚焦
+    }
+
+    function closeRenameModal() {
+        document.getElementById('renameModal').classList.remove('show');
+        currentRenamingId = null;
+    }
+
+    function confirmRename() {
+        if (currentRenamingId === null) return;
+        
+        const newName = document.getElementById('renameInput').value.trim();
+        if (newName) {
+            const tabData = tabs.find(t => t.id === currentRenamingId);
+            if (tabData) {
+                tabData.name = newName;
+                document.getElementById(`tab-name-${currentRenamingId}`).innerText = newName;
+                saveTabsToStorage();
+                showToast("分頁名稱已儲存");
+            }
+        }
+        closeRenameModal();
+    }
+
+    /* --- 拖曳捲動邏輯 --- */
     function enableDragScroll() {
         const slider = document.getElementById('tabsList');
         let isDown = false;
@@ -466,7 +530,7 @@
             if (!isDown) return;
             e.preventDefault();
             const x = e.pageX - slider.offsetLeft;
-            const walk = (x - startX) * 2; // 捲動速度倍率
+            const walk = (x - startX) * 2; 
             slider.scrollLeft = scrollLeft - walk;
         });
     }
@@ -783,7 +847,9 @@
         tabBtn.className = 'tab-btn';
         tabBtn.id = `tab-btn-${id}`;
         tabBtn.onclick = (e) => { if(e.target.classList.contains('tab-close')) return; switchTab(id); };
-        tabBtn.ondblclick = () => renameTab(id);
+        // 使用新的 Modal 開啟函式
+        tabBtn.ondblclick = () => openRenameModal(id);
+        
         tabBtn.innerHTML = `<span id="tab-name-${id}">${name}</span><span class="tab-close" onclick="removeTab(${id})">✕</span>`;
         
         listContainer.appendChild(tabBtn);
@@ -838,8 +904,6 @@
         if(btn && pane) { 
             btn.classList.add('active'); 
             pane.classList.add('active'); 
-            
-            // 自動捲動到選中的分頁
             btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
     }
