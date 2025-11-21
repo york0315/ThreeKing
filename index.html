@@ -452,7 +452,6 @@
         }
     };
 
-    // --- 新增：視窗取得焦點時，清除 App 紅點 (Badge) ---
     window.addEventListener('focus', () => {
         if ('clearAppBadge' in navigator) {
             navigator.clearAppBadge().catch(e => console.log(e));
@@ -486,9 +485,15 @@
                     if (btnStep) {
                         const btn = document.getElementById(`btn${btnStep}-${tab.id}`);
                         markButtonAsFinished(btn);
-                        sendNotification(`[${tab.name}] 計時結束`, `${btnStep}王 時間到了！`);
                         
-                        // --- 新增：在 App 圖示上顯示紅點 ---
+                        // 發送通知，並帶入 tab.id 與 結束的關卡(btnStep)
+                        sendNotification(
+                            `[${tab.name}] 計時結束`, 
+                            `${btnStep}王 時間到了！ (點擊開始下一關)`, 
+                            tab.id, 
+                            btnStep
+                        );
+                        
                         if ('setAppBadge' in navigator) {
                             navigator.setAppBadge(1).catch(e => console.log(e));
                         }
@@ -498,6 +503,44 @@
                 }
             }
         });
+    }
+
+    /* =========================================
+       [新增功能] 點擊通知自動下一關的邏輯
+       ========================================= */
+    function sendNotification(title, body, tabId, finishedStep) {
+        startTitleBlink("【時間到！】" + title);
+        
+        if (Notification.permission === "granted") {
+            const notification = new Notification(title, {
+                body: body,
+                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png",
+                requireInteraction: true 
+            });
+
+            // --- 關鍵修改：通知點擊事件 ---
+            notification.onclick = function() {
+                window.focus(); 
+                notification.close(); 
+                stopTitleBlink();
+                if ('clearAppBadge' in navigator) navigator.clearAppBadge();
+
+                // 自動觸發下一關
+                if (tabId && finishedStep) {
+                    const nextStep = finishedStep + 1;
+                    // 只有當下一關是 2 或 3 時才觸發 (3王結束後沒有4王)
+                    if (nextStep <= 3) {
+                        const nextBtn = document.getElementById(`btn${nextStep}-${tabId}`);
+                        // 確保按鈕存在且可以點擊 (避免重複觸發)
+                        if (nextBtn && !nextBtn.disabled) {
+                            nextBtn.click(); // 模擬點擊按鈕
+                        }
+                    }
+                }
+            };
+        } else { 
+            setTimeout(() => alert(`${title}\n${body}`), 100); 
+        }
     }
 
     /* =========================================
@@ -598,28 +641,6 @@
             document.title = state ? originalTitle : text;
             state = !state;
         }, 1000); 
-    }
-
-    function sendNotification(title, body) {
-        startTitleBlink("【時間到！】" + title);
-        if (Notification.permission === "granted") {
-            // --- 新增：requireInteraction 讓通知不會自動消失 (黏滯) ---
-            const notification = new Notification(title, {
-                body: body,
-                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png",
-                requireInteraction: true 
-            });
-            notification.onclick = function() {
-                window.focus(); 
-                notification.close(); 
-                stopTitleBlink();
-                // 點擊通知時也清除紅點
-                if ('clearAppBadge' in navigator) navigator.clearAppBadge();
-            };
-        } else { 
-            // 如果沒權限，只能用 alert (這會強制閃爍，但體驗較差)
-            setTimeout(() => alert(`${title}\n${body}`), 100); 
-        }
     }
 
     window.onclick = function() { stopTitleBlink(); };
@@ -852,7 +873,6 @@
         
         stopTitleBlink();
         
-        // 重置時也清除紅點
         if ('clearAppBadge' in navigator) navigator.clearAppBadge();
     }
 
