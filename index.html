@@ -18,9 +18,9 @@
             --timeout-color: #c0392b; 
             --success-color: #27ae60; 
             --info-gray: #95a5a6; 
-            --tab-inactive: #e5e7eb; /* 調整為淺灰，讓邊框更明顯 */
-            --tab-border: #ccc;      /* 新增：標籤邊框顏色 */
-            --box-border: #bdc3c7;   /* 二進位框線顏色 */
+            --tab-bg: #f1f3f5;       /* 新增：分頁區背景色 */
+            --tab-border: #e0e0e0;   /* 新增：分頁區框線 */
+            --box-border: #bdc3c7;
             --toast-bg: rgba(0, 0, 0, 0.8);
         }
 
@@ -100,111 +100,90 @@
         .bit-box { display: flex; flex-direction: column; align-items: center; width: 35px; }
         .bit-label { font-size: 12px; color: #888; margin-bottom: 2px; }
         
-        /* --- 1. 修復二進位框線 --- */
+        /* --- 1. 修復二進位框線 (強制指定顏色) --- */
         .bit-value {
             width: 35px; height: 45px; line-height: 45px; 
-            /* 強制指定顏色，避免變數失效 */
-            border: 2px solid #bdc3c7; 
+            border: 2px solid #bdc3c7; /* 明確指定顏色 */
             border-radius: 5px; font-size: 20px; font-weight: bold; background-color: white;
             color: var(--primary-color); transition: all 0.3s;
         }
-        .bit-value.active { 
-            border-color: var(--primary-color); 
-            background-color: #ebf5ff; 
-        }
+        .bit-value.active { border-color: var(--primary-color); background-color: #ebf5ff; }
 
-        /* --- 2. TAG 標籤樣式修復 --- */
+        /* --- 2. TAG 樣式重構：Card Footer 風格 --- */
         
+        /* 上半部：內容區 */
         .tab-content-wrapper {
             background: white; 
-            border-radius: 15px 15px 0 0; /* 上圓角 */
+            border-radius: 15px 15px 0 0; /* 上方圓角 */
             padding: 10px 20px; 
-            /* 陰影調整 */
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
             min-height: auto;
             display: flex; flex-direction: column; align-items: center;
+            z-index: 2;
             position: relative;
-            z-index: 2; 
-            /* 增加底部邊框，讓未選中的標籤看起來在線條後面 */
-            border-bottom: 1px solid var(--tab-border);
         }
 
+        /* 下半部：分頁區 (Footer) */
         .tabs-header { 
             display: flex; 
             overflow-x: auto; 
-            background: transparent;
-            padding: 0 15px; 
-            gap: 5px;
-            margin-top: -1px; /* 讓標籤貼合內容區底部 */
+            
+            /* 關鍵：給予背景色和下方圓角，形成完整的「框」 */
+            background: var(--tab-bg); 
+            border-radius: 0 0 15px 15px; 
+            border-top: 1px solid var(--tab-border); /* 分隔線 */
+            
+            padding: 8px 15px; 
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* 陰影與上方一致 */
+            align-items: center;
         }
 
+        /* 分頁按鈕：膠囊風格 */
         .tab-btn {
-            padding: 8px 15px; 
-            background: var(--tab-inactive); 
+            padding: 6px 15px; 
             
-            /* 加上邊框 */
-            border: 1px solid var(--tab-border);
-            border-top: none; /* 預設移除上方邊框 (由 content-wrapper 提供線條) */
+            /* 預設透明，融入灰色背景 */
+            background: transparent; 
+            border: 1px solid transparent; 
+            border-radius: 20px; /* 圓潤膠囊 */
             
-            border-radius: 0 0 10px 10px; 
             cursor: pointer; 
             font-weight: bold; 
             color: #666;
             display: flex; align-items: center; gap: 8px;
-            min-width: 80px; justify-content: space-between; 
+            min-width: auto; /* 自動寬度 */
+            justify-content: center; 
             transition: all 0.2s; 
             white-space: nowrap;
-            margin-top: 0;
-            position: relative;
-            z-index: 1;
         }
 
-        /* 選中狀態 */
+        /* 選中狀態：白色突起 */
         .tab-btn.active { 
             background: white; 
             color: var(--primary-color); 
-            
-            /* 關鍵：往上推，蓋住 content-wrapper 的底線 */
-            margin-top: -1px; 
-            padding-top: 9px; /* 補償 margin */
-            
-            /* 邊框設定：上方無框，其他有框 */
-            border: 1px solid var(--tab-border);
-            border-top: 1px solid white; /* 用白色線條蓋住上方的灰色線 */
-            
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            z-index: 3; 
+            border-color: #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .tab-close { 
-            font-size: 12px; 
-            color: #888; 
-            padding: 2px 6px; 
-            border-radius: 50%; 
+            font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; 
+            margin-left: 5px;
         }
         .tab-close:hover { background: #ffcccc; color: #d00; }
         
         .add-tab-btn {
-            padding: 5px 12px; 
-            font-size: 20px; 
-            background: #4a90e2; 
-            color: white;
-            border: none; 
-            border-radius: 0 0 10px 10px;
-            cursor: pointer; 
-            margin-left: auto;
-            height: fit-content;
-            /* 對齊 */
-            margin-top: 0;
-            border: 1px solid #357abd;
-            border-top: none;
+            padding: 5px 12px; font-size: 18px; background: #4a90e2; color: white;
+            border: none; border-radius: 50%; cursor: pointer; margin-left: auto;
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
         }
+        .add-tab-btn:hover { background-color: #357abd; }
 
         .tab-pane { display: none; width: 100%; animation: fadeIn 0.3s; }
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Timer UI */
+        /* --- Timer UI --- */
         .timer-display-row {
             position: relative; width: 100%; max-width: 500px; margin: 10px auto; height: 60px;
             display: flex; justify-content: center; align-items: center;
@@ -327,7 +306,7 @@
             <!-- JS 動態內容 -->
         </div>
         
-        <!-- 分頁按鈕區 (圓角在下，透明背景) -->
+        <!-- 分頁按鈕區 (圓角在下，淺灰背景) -->
         <div class="tabs-header" id="tabsHeader">
             <button class="add-tab-btn" onclick="addNewTab()">+</button>
         </div>
