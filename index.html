@@ -32,7 +32,7 @@
             min-height: 100vh;
             margin: 0;
             background-color: #f0f2f5;
-            padding: 15px; /* Body padding 減少 */
+            padding: 15px;
             padding-bottom: 80px;
         }
 
@@ -57,7 +57,6 @@
 
         .container {
             background: white;
-            /* 1. 減少各區塊內距 (原 2rem -> 1.2rem) */
             padding: 1.2rem; 
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -71,12 +70,12 @@
             color: #333; 
             border-bottom: none; 
             padding-bottom: 0; 
-            margin-bottom: 10px; /* 標題與內容的間距 */
-            margin-top: 0;       /* 移除標題上方多餘空白 */
+            margin-bottom: 5px; /* 縮小標題下方間距 */
+            margin-top: 0;
             font-size: 1.5rem; 
             display: flex; justify-content: center; align-items: center; gap: 10px;
         }
-        h2.with-border { border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px; }
+        h2.with-border { border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px; margin-bottom: 10px; }
 
         /* Toast */
         #toast-notification {
@@ -87,11 +86,16 @@
         }
         #toast-notification.show { opacity: 1; transform: translateY(0); }
 
-        /* 輸入框 */
-        .input-group { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        /* --- 輸入框與二進位 (1. 緊湊化) --- */
+        .input-group { 
+            display: flex; flex-direction: column; 
+            gap: 5px; /* 大幅減少間距 (原15px) */
+            align-items: center; 
+        }
 
         #decimalInput {
-            padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px;
+            padding: 8px; /* 稍微減少 padding */
+            font-size: 16px; border: 1px solid #ddd; border-radius: 5px;
             text-align: center; font-weight: bold; color: #2c3e50;
             width: 315px; max-width: 100%; box-sizing: border-box;
         }
@@ -103,7 +107,7 @@
             font-weight: normal; color: #333;
         }
 
-        .error-msg { color: #e74c3c; font-size: 12px; height: 15px; margin-top: -10px; }
+        .error-msg { color: #e74c3c; font-size: 12px; height: 15px; margin-top: -5px; }
 
         .binary-container { display: flex; justify-content: center; gap: 5px; margin-top: 0; flex-wrap: wrap; }
         .bit-box { display: flex; flex-direction: column; align-items: center; width: 35px; }
@@ -115,14 +119,21 @@
         }
         .bit-value.active { border-color: var(--primary-color); background-color: #ebf5ff; }
 
-        /* Tabs */
-        .tabs-header { display: flex; overflow-x: auto; background: #ddd; border-radius: 10px 10px 0 0; padding: 5px 5px 0 5px; gap: 5px; }
+        /* --- Tabs (3. 移到下方) --- */
+        /* Header 在下方，圓角改為下方 */
+        .tabs-header { 
+            display: flex; overflow-x: auto; background: #ddd; 
+            border-radius: 0 0 15px 15px; /* 下方圓角 */
+            padding: 5px 5px 5px 5px; gap: 5px;
+        }
+        /* 按鈕圓角改為下方 */
         .tab-btn {
-            padding: 10px 15px; background: var(--tab-inactive); border: none; border-radius: 10px 10px 0 0;
+            padding: 10px 15px; background: var(--tab-inactive); border: none; 
+            border-radius: 0 0 10px 10px; /* 下方圓角 */
             cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
             min-width: 80px; justify-content: space-between; transition: background 0.2s; white-space: nowrap;
         }
-        .tab-btn.active { background: white; color: var(--primary-color); box-shadow: 0 -2px 5px rgba(0,0,0,0.05); }
+        .tab-btn.active { background: white; color: var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .tab-close { font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; }
         .tab-close:hover { background: #ffcccc; color: #d00; }
         .add-tab-btn {
@@ -130,11 +141,12 @@
             border: none; border-radius: 5px; cursor: pointer; margin-left: auto;
         }
         
+        /* Content 在上方，圓角改為上方 */
         .tab-content-wrapper {
-            background: white; border-radius: 0 0 15px 15px; 
-            padding: 10px 20px; /* 3. 減少上下 padding */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-            /* 3. 移除 min-height: 300px，改為 auto，大幅減少下方空白 */
+            background: white; 
+            border-radius: 15px 15px 0 0; /* 上方圓角 */
+            padding: 10px 20px; 
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05); /* 陰影方向微調 */
             min-height: auto;
             display: flex; flex-direction: column; align-items: center;
         }
@@ -144,26 +156,15 @@
 
         /* --- Timer UI --- */
         .timer-display-row {
-            position: relative; 
-            width: 100%; 
-            max-width: 500px;
-            margin: 10px auto;
-            height: 60px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: relative; width: 100%; max-width: 500px; margin: 10px auto; height: 60px;
+            display: flex; justify-content: center; align-items: center;
         }
         .timer-display {
             font-size: 3.5rem; font-family: 'Courier New', Courier, monospace;
-            color: #333; font-weight: bold; margin: 0; padding: 0;
-            line-height: 1; /* 確保行高緊湊 */
+            color: #333; font-weight: bold; margin: 0; padding: 0; line-height: 1;
         }
         .btn-reset-top {
-            position: absolute; 
-            right: 0; 
-            /* 2. 對齊時間上緣 */
-            top: 8px; /* 微調像素以對齊 3.5rem 字體的頂部 */
-            transform: none; /* 移除垂直置中 */
+            position: absolute; right: 0; top: 8px; transform: none;
             background-color: var(--reset-color); color: white; border: none;
             padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
         }
@@ -171,7 +172,6 @@
 
         .controls-wrapper { 
             display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; 
-            /* 3. 減少 wrapper 底部空白 */
             margin-bottom: 5px;
         }
         .btn-group { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; gap: 10px; }
@@ -213,9 +213,10 @@
             display: flex; align-items: center; gap: 2px; justify-content: center; width: 100%; font-size: 12px;
         }
         
+        /* 2. 設定選項對齊 */
         .options-col {
             display: flex; flex-direction: column; align-items: flex-start; width: 100%;
-            padding: 10px 10px 0 10px; /* 減少 padding */
+            padding: 10px 0; /* 移除左右 padding，對齊上方格子左緣 */
             border-top: 1px solid #eee; margin-top: 0; gap: 10px;
         }
         .checkbox-wrapper { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
@@ -234,13 +235,12 @@
 
         .save-msg {
             font-size: 0.85rem; color: var(--info-gray); font-weight: normal;
-            height: 20px; margin-bottom: 5px; opacity: 0; transition: opacity 0.5s ease; 
+            height: 20px; margin-bottom: 0; /* 減少提示與輸入框的距離 */
+            opacity: 0; transition: opacity 0.5s ease; 
         }
         .tab-save-msg {
             font-size: 0.85rem; color: var(--info-gray); font-weight: normal;
-            height: 20px; 
-            /* 3. 減少下方空白 */
-            margin-top: 0; 
+            height: 20px; margin-top: 0; 
             opacity: 0; transition: opacity 0.5s ease;
             align-self: center; text-align: center;
         }
@@ -262,6 +262,7 @@
 
     <div class="container">
         <h2>每日密碼</h2>
+        <!-- 1. 減少這裡的空白 -->
         <div id="saveMsg" class="save-msg">(已記錄當下密碼)</div>
         
         <div class="input-group">
@@ -274,11 +275,13 @@
     </div>
 
     <div class="container timer-section">
-        <div class="tabs-header" id="tabsHeader">
-            <button class="add-tab-btn" onclick="addNewTab()">+</button>
-        </div>
+        <!-- 3. HTML 結構調整：內容區在前，Tabs Header 在後 (為了將 TAG 移到下方) -->
         <div class="tab-content-wrapper" id="tabsContent">
             <!-- JS 動態內容 -->
+        </div>
+        
+        <div class="tabs-header" id="tabsHeader">
+            <button class="add-tab-btn" onclick="addNewTab()">+</button>
         </div>
     </div>
 
@@ -310,6 +313,7 @@
         </div>
 
         <div class="options-col">
+            <!-- 2. 左側 Padding 移除，對齊上方 -->
             <label class="checkbox-wrapper">
                 <input type="checkbox" id="conf-auto-next" onchange="handleAutoNextChange()">
                 自動點擊下一王啟動
@@ -695,6 +699,8 @@
         tabBtn.onclick = (e) => { if(e.target.classList.contains('tab-close')) return; switchTab(id); };
         tabBtn.ondblclick = () => renameTab(id);
         tabBtn.innerHTML = `<span id="tab-name-${id}">${name}</span><span class="tab-close" onclick="removeTab(${id})">✕</span>`;
+        
+        // 3. 注意：Header 移到內容下方，所以這裡改用 appendChild 到 headerContainer
         headerContainer.insertBefore(tabBtn, addBtn);
 
         const contentContainer = document.getElementById('tabsContent');
