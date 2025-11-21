@@ -18,8 +18,9 @@
             --timeout-color: #c0392b; 
             --success-color: #27ae60; 
             --info-gray: #95a5a6; 
-            --tab-inactive: #d1d5db; /* 加深未選中顏色 */
-            --tab-active: #ffffff;
+            --tab-inactive: #e5e7eb; /* 調整為淺灰，讓邊框更明顯 */
+            --tab-border: #ccc;      /* 新增：標籤邊框顏色 */
+            --box-border: #bdc3c7;   /* 二進位框線顏色 */
             --toast-bg: rgba(0, 0, 0, 0.8);
         }
 
@@ -98,65 +99,81 @@
         .binary-container { display: flex; justify-content: center; gap: 5px; margin-top: 0; flex-wrap: wrap; }
         .bit-box { display: flex; flex-direction: column; align-items: center; width: 35px; }
         .bit-label { font-size: 12px; color: #888; margin-bottom: 2px; }
+        
+        /* --- 1. 修復二進位框線 --- */
         .bit-value {
-            width: 35px; height: 45px; line-height: 45px; border: 2px solid var(--box-border);
+            width: 35px; height: 45px; line-height: 45px; 
+            /* 強制指定顏色，避免變數失效 */
+            border: 2px solid #bdc3c7; 
             border-radius: 5px; font-size: 20px; font-weight: bold; background-color: white;
             color: var(--primary-color); transition: all 0.3s;
         }
-        .bit-value.active { border-color: var(--primary-color); background-color: #ebf5ff; }
+        .bit-value.active { 
+            border-color: var(--primary-color); 
+            background-color: #ebf5ff; 
+        }
 
-        /* --- v27 修改：分頁籤樣式重構 --- */
+        /* --- 2. TAG 標籤樣式修復 --- */
         
-        /* Content 在上方 */
         .tab-content-wrapper {
             background: white; 
-            border-radius: 15px 15px 0 0; /* 上方圓角 */
+            border-radius: 15px 15px 0 0; /* 上圓角 */
             padding: 10px 20px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+            /* 陰影調整 */
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); 
             min-height: auto;
             display: flex; flex-direction: column; align-items: center;
             position: relative;
-            z-index: 2; /* 確保內容區在按鈕之上 */
+            z-index: 2; 
+            /* 增加底部邊框，讓未選中的標籤看起來在線條後面 */
+            border-bottom: 1px solid var(--tab-border);
         }
 
-        /* Header 在下方 */
         .tabs-header { 
             display: flex; 
             overflow-x: auto; 
-            background: transparent; /* 移除灰色背景，改為透明 */
-            padding: 0 15px; /* 移除上下內距，讓按鈕貼齊上方 */
+            background: transparent;
+            padding: 0 15px; 
             gap: 5px;
-            margin-top: -1px; /* 微調，消除縫隙 */
+            margin-top: -1px; /* 讓標籤貼合內容區底部 */
         }
 
-        /* 分頁按鈕 */
         .tab-btn {
             padding: 8px 15px; 
-            background: var(--tab-inactive); /* 較深的灰色 */
-            border: none; 
-            border-radius: 0 0 10px 10px; /* 下方圓角 */
+            background: var(--tab-inactive); 
+            
+            /* 加上邊框 */
+            border: 1px solid var(--tab-border);
+            border-top: none; /* 預設移除上方邊框 (由 content-wrapper 提供線條) */
+            
+            border-radius: 0 0 10px 10px; 
             cursor: pointer; 
             font-weight: bold; 
             color: #666;
             display: flex; align-items: center; gap: 8px;
             min-width: 80px; justify-content: space-between; 
-            transition: background 0.2s, transform 0.2s; 
+            transition: all 0.2s; 
             white-space: nowrap;
             margin-top: 0;
+            position: relative;
+            z-index: 1;
         }
 
-        /* 選中狀態 (無縫接合關鍵) */
+        /* 選中狀態 */
         .tab-btn.active { 
             background: white; 
             color: var(--primary-color); 
-            /* 上方陰影移除，只留下方陰影 */
-            box-shadow: 0 5px 5px rgba(0,0,0,0.05); 
             
-            /* 向上延伸覆蓋內容區邊緣 */
-            padding-top: 12px; 
-            margin-top: -5px; 
+            /* 關鍵：往上推，蓋住 content-wrapper 的底線 */
+            margin-top: -1px; 
+            padding-top: 9px; /* 補償 margin */
+            
+            /* 邊框設定：上方無框，其他有框 */
+            border: 1px solid var(--tab-border);
+            border-top: 1px solid white; /* 用白色線條蓋住上方的灰色線 */
+            
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             z-index: 3; 
-            position: relative;
         }
 
         .tab-close { 
@@ -173,17 +190,21 @@
             background: #4a90e2; 
             color: white;
             border: none; 
-            border-radius: 0 0 10px 10px; /* 下方圓角 */
+            border-radius: 0 0 10px 10px;
             cursor: pointer; 
             margin-left: auto;
             height: fit-content;
+            /* 對齊 */
+            margin-top: 0;
+            border: 1px solid #357abd;
+            border-top: none;
         }
 
         .tab-pane { display: none; width: 100%; animation: fadeIn 0.3s; }
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- Timer UI --- */
+        /* Timer UI */
         .timer-display-row {
             position: relative; width: 100%; max-width: 500px; margin: 10px auto; height: 60px;
             display: flex; justify-content: center; align-items: center;
