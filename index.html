@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>每日三王計時器</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -409,7 +410,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v14'; // 版本更新
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v15'; // 版本更新
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
 
     let notificationPermission = "default";
@@ -417,9 +418,7 @@
     let saveMsgTimeout = null; 
     const originalTitle = document.title;
 
-    // --- 定義 Web Worker (背景計時助手) ---
-    // 瀏覽器不會節流 Worker，我們讓 Worker 每 250ms 發送一個訊號給主程式
-    // 這樣主程式就會被強制喚醒去檢查時間
+    // --- Web Worker ---
     const workerBlob = new Blob([`
         setInterval(() => {
             postMessage('tick');
@@ -429,10 +428,9 @@
     const workerUrl = URL.createObjectURL(workerBlob);
     const timerWorker = new Worker(workerUrl);
 
-    // 讓 Worker 監聽 (雖然我們主要用它來發送，但保留接收能力)
     timerWorker.onmessage = function(e) {
         if (e.data === 'tick') {
-            checkAllTimers(); // 每次 Worker 報時，檢查所有計時器
+            checkAllTimers(); 
         }
     };
 
@@ -452,18 +450,16 @@
     };
 
     /* =========================================
-       [核心邏輯] 全域計時檢查 (由 Web Worker 觸發)
+       [核心修正] 全域計時檢查 (移除猜測邏輯)
        ========================================= */
     function checkAllTimers() {
         const now = Date.now();
         
-        // 遍歷所有分頁，檢查是否有正在運行的計時器
         tabs.forEach(tab => {
-            if (tab.endTime && !tab.finished) { // 只有設定了結束時間且尚未結束的才檢查
-                // 剩餘秒數
+            // 只有在「有設定結束時間」且「還沒完成」時才計算
+            if (tab.endTime && !tab.finished) { 
                 const remaining = Math.ceil((tab.endTime - now) / 1000);
                 
-                // 如果是當前顯示的分頁，更新畫面
                 const activePane = document.getElementById(`tab-pane-${tab.id}`);
                 if (activePane && activePane.classList.contains('active')) {
                     const display = document.getElementById(`timer-display-${tab.id}`);
@@ -472,39 +468,25 @@
                     }
                 }
 
-                // 檢查是否時間到
                 if (remaining <= 0) {
-                    // 標記結束，避免重複觸發
                     tab.endTime = null; 
-                    tab.finished = true; // 標記已完成當次倒數
+                    tab.finished = true; 
 
-                    // 觸發 UI 變更 (X) 和 通知
-                    // 注意：這可能是在背景觸發，所以要用 tab.id 找元素
-                    const btnStep = getRunningStep(tab); // 輔助函數：找出現在跑到第幾王
+                    // --- 修正點：直接使用 tab.currentStep 來決定是哪個按鈕結束 ---
+                    // 絕對準確，不再依賴按鈕狀態去猜測
+                    const btnStep = tab.currentStep; 
+                    
                     if (btnStep) {
                         const btn = document.getElementById(`btn${btnStep}-${tab.id}`);
                         markButtonAsFinished(btn);
                         sendNotification(`[${tab.name}] 計時結束`, `${btnStep}王 時間到了！`);
+                        
+                        // 結束後清除 currentStep，避免邏輯殘留
+                        tab.currentStep = null;
                     }
                 }
             }
         });
-    }
-
-    // 輔助：判斷現在是哪個按鈕正在跑 (根據按鈕鎖定狀態推斷)
-    function getRunningStep(tab) {
-        const btn1 = document.getElementById(`btn1-${tab.id}`);
-        const btn2 = document.getElementById(`btn2-${tab.id}`);
-        const btn3 = document.getElementById(`btn3-${tab.id}`);
-        
-        // 如果 3王解鎖且沒變X，那就是3王在跑
-        if (!btn3.disabled && !btn3.classList.contains('btn-timeout')) return 3;
-        // 如果 2王解鎖且沒變X，且3王還鎖著，那就是2王在跑
-        if (!btn2.disabled && !btn2.classList.contains('btn-timeout')) return 2;
-        // 同理 1王
-        if (!btn1.disabled && !btn1.classList.contains('btn-timeout')) return 1;
-        
-        return null;
     }
 
     /* =========================================
@@ -671,7 +653,8 @@
             id: id,
             name: name,
             endTime: null,
-            finished: false
+            finished: false,
+            currentStep: null // 新增：明確記錄現在是第幾王在跑
         };
         tabs.push(newTab);
 
@@ -731,7 +714,6 @@
     function removeTab(id) {
         if(!confirm('確定要刪除這個分頁嗎？')) return;
         const targetTab = tabs.find(t => t.id === id);
-        // 不再需要 clearInterval，因為現在是統一由 Worker 管理，只需設為 null
         targetTab.endTime = null; 
         
         document.getElementById(`tab-btn-${id}`).remove();
@@ -769,7 +751,6 @@
         btnElement.innerHTML = `<span class="btn-title">${title}</span><span class="btn-subtitle">${subtitle}</span>`;
     }
 
-    // 啟動計時 (設定目標時間)
     function startTabTimer(tabId, seconds, btnStep) {
         const tabData = tabs.find(t => t.id === tabId);
         if (!tabData) return;
@@ -792,9 +773,12 @@
             markButtonAsFinished(btn1); markButtonAsFinished(btn2); btn3.disabled = true;
         }
 
-        // 設定目標時間 (timestamp)
-        tabData.endTime = Date.now() + (seconds * 1000);
-        tabData.finished = false; // 重置完成狀態
+        const now = Date.now();
+        tabData.endTime = now + (seconds * 1000);
+        tabData.finished = false;
+        
+        // --- 修正點：明確記錄現在跑的是第幾王 ---
+        tabData.currentStep = btnStep;
 
         updateDisplay(display, seconds);
     }
@@ -803,8 +787,8 @@
         const tabData = tabs.find(t => t.id === tabId);
         if (!tabData) return;
 
-        // 清除目標時間 (停止計時)
         tabData.endTime = null;
+        tabData.currentStep = null; // 重置時也清空步驟記錄
         
         document.getElementById(`timer-display-${tabId}`).innerText = "00:00";
 
@@ -832,6 +816,7 @@
         if (!tabData) return;
 
         tabData.endTime = null;
+        tabData.currentStep = null; // 清空步驟記錄
         document.getElementById(`timer-display-${tabId}`).innerText = "00:00";
 
         const btn1 = document.getElementById(`btn1-${tabId}`);
