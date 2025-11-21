@@ -32,13 +32,13 @@
             min-height: 100vh;
             margin: 0;
             background-color: #f0f2f5;
-            padding: 10px 20px; /* 上方 padding 減少 */
+            padding: 15px; /* Body padding 減少 */
             padding-bottom: 80px;
         }
 
         h1 {
             color: #2c3e50;
-            margin-bottom: 10px; /* 標題下方空白減少 */
+            margin-bottom: 15px; 
             font-size: 2.5rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
             display: flex;
@@ -52,12 +52,13 @@
             max-width: 600px;
             display: flex;
             flex-direction: column;
-            gap: 15px; /* 各大區塊間距減少 (原20px) */
+            gap: 15px;
         }
 
         .container {
             background: white;
-            padding: 1.5rem; /* 容器內距減少 (原2rem)，讓上方空白變少 */
+            /* 1. 減少各區塊內距 (原 2rem -> 1.2rem) */
+            padding: 1.2rem; 
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
@@ -67,12 +68,17 @@
         .container.timer-section { padding: 0; background: transparent; box-shadow: none; }
 
         h2 {
-            color: #333; border-bottom: none; padding-bottom: 5px; margin-bottom: 5px;
-            font-size: 1.5rem; display: flex; justify-content: center; align-items: center; gap: 10px;
+            color: #333; 
+            border-bottom: none; 
+            padding-bottom: 0; 
+            margin-bottom: 10px; /* 標題與內容的間距 */
+            margin-top: 0;       /* 移除標題上方多餘空白 */
+            font-size: 1.5rem; 
+            display: flex; justify-content: center; align-items: center; gap: 10px;
         }
-        h2.with-border { border-bottom: 2px solid var(--secondary-color); }
+        h2.with-border { border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px; }
 
-        /* --- Toast --- */
+        /* Toast */
         #toast-notification {
             position: fixed; bottom: 20px; right: 20px; background-color: var(--toast-bg); color: white;
             padding: 10px 20px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 0.9rem;
@@ -81,7 +87,7 @@
         }
         #toast-notification.show { opacity: 1; transform: translateY(0); }
 
-        /* --- 輸入框 --- */
+        /* 輸入框 */
         .input-group { display: flex; flex-direction: column; gap: 15px; align-items: center; }
 
         #decimalInput {
@@ -109,7 +115,7 @@
         }
         .bit-value.active { border-color: var(--primary-color); background-color: #ebf5ff; }
 
-        /* --- Tabs --- */
+        /* Tabs */
         .tabs-header { display: flex; overflow-x: auto; background: #ddd; border-radius: 10px 10px 0 0; padding: 5px 5px 0 5px; gap: 5px; }
         .tab-btn {
             padding: 10px 15px; background: var(--tab-inactive); border: none; border-radius: 10px 10px 0 0;
@@ -126,20 +132,22 @@
         
         .tab-content-wrapper {
             background: white; border-radius: 0 0 15px 15px; 
-            padding: 15px 20px; /* 減少上下 padding (原20px) */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 280px; /* 稍微減少最小高度 */
+            padding: 10px 20px; /* 3. 減少上下 padding */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+            /* 3. 移除 min-height: 300px，改為 auto，大幅減少下方空白 */
+            min-height: auto;
             display: flex; flex-direction: column; align-items: center;
         }
         .tab-pane { display: none; width: 100%; animation: fadeIn 0.3s; }
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- Timer UI (Modified for alignment) --- */
+        /* --- Timer UI --- */
         .timer-display-row {
             position: relative; 
             width: 100%; 
-            max-width: 500px; /* 1. 限制寬度與下方按鈕群組一致 */
-            margin: 10px auto; /* 置中 */
+            max-width: 500px;
+            margin: 10px auto;
             height: 60px;
             display: flex;
             justify-content: center;
@@ -148,18 +156,25 @@
         .timer-display {
             font-size: 3.5rem; font-family: 'Courier New', Courier, monospace;
             color: #333; font-weight: bold; margin: 0; padding: 0;
+            line-height: 1; /* 確保行高緊湊 */
         }
         .btn-reset-top {
             position: absolute; 
-            right: 0; /* 1. 絕對靠右，因為父層只有500px，所以會對齊按鈕右側 */
-            top: 50%; transform: translateY(-50%);
+            right: 0; 
+            /* 2. 對齊時間上緣 */
+            top: 8px; /* 微調像素以對齊 3.5rem 字體的頂部 */
+            transform: none; /* 移除垂直置中 */
             background-color: var(--reset-color); color: white; border: none;
             padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
         }
         .btn-reset-top:hover { background-color: #c0392b; }
 
-        .controls-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; }
-        .btn-group { display: flex; justify-content: space-between; width: 100%; margin-bottom: 10px; gap: 10px; }
+        .controls-wrapper { 
+            display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; 
+            /* 3. 減少 wrapper 底部空白 */
+            margin-bottom: 5px;
+        }
+        .btn-group { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; gap: 10px; }
         .btn-column { display: flex; flex-direction: column; width: 32%; gap: 10px; }
         
         .timer-btn {
@@ -183,9 +198,9 @@
         .btn-sub-reset:hover:not(:disabled) { background-color: var(--sub-reset-color); color: white; }
         .btn-sub-reset:disabled { border-color: #e0e0e0; color: #ccc; background-color: transparent; cursor: not-allowed; opacity: 0.5; }
 
-        /* --- Settings UI --- */
+        /* Settings UI */
         .settings-flex-row {
-            display: flex; justify-content: space-between; width: 100%; margin-bottom: 20px; gap: 10px;
+            display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px; gap: 10px;
         }
         .setting-item {
             display: flex; flex-direction: column; align-items: center; background: #f9f9f9;
@@ -200,19 +215,20 @@
         
         .options-col {
             display: flex; flex-direction: column; align-items: flex-start; width: 100%;
-            padding: 10px 20px; border-top: 1px solid #eee; margin-top: 10px; gap: 15px;
+            padding: 10px 10px 0 10px; /* 減少 padding */
+            border-top: 1px solid #eee; margin-top: 0; gap: 10px;
         }
         .checkbox-wrapper { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
         .checkbox-wrapper input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
         .checkbox-wrapper.disabled { opacity: 0.5; cursor: not-allowed; }
         .permission-hint {
-            color: var(--reset-color); font-size: 0.8rem; margin-left: 28px; margin-top: -10px; display: none;
+            color: var(--reset-color); font-size: 0.8rem; margin-left: 28px; margin-top: -5px; display: none;
         }
 
         .btn-install {
             background-color: #27ae60; color: white; border: none; padding: 10px 20px;
             border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;
-            width: 100%; margin-top: 10px; display: none; 
+            width: 100%; margin-top: 15px; display: none; 
         }
         .btn-install:hover { background-color: #2ecc71; }
 
@@ -221,9 +237,11 @@
             height: 20px; margin-bottom: 5px; opacity: 0; transition: opacity 0.5s ease; 
         }
         .tab-save-msg {
-            /* 2. 計時區下方空白減少 */
             font-size: 0.85rem; color: var(--info-gray); font-weight: normal;
-            height: 20px; margin-top: 5px; opacity: 0; transition: opacity 0.5s ease;
+            height: 20px; 
+            /* 3. 減少下方空白 */
+            margin-top: 0; 
+            opacity: 0; transition: opacity 0.5s ease;
             align-self: center; text-align: center;
         }
         .tab-save-msg.show { opacity: 1; }
@@ -235,7 +253,6 @@
 <!-- 全域漂浮通知 -->
 <div id="toast-notification">已儲存</div>
 
-<!-- 1. 標題含圖示 -->
 <h1>
     <img src="https://cdn-icons-png.flaticon.com/512/850/850960.png" alt="Logo">
     三王計時器
@@ -243,7 +260,6 @@
 
 <div class="main-wrapper">
 
-    <!-- 上半部：每日密碼 -->
     <div class="container">
         <h2>每日密碼</h2>
         <div id="saveMsg" class="save-msg">(已記錄當下密碼)</div>
@@ -257,7 +273,6 @@
         </div>
     </div>
 
-    <!-- 中間：多頁籤計時器 -->
     <div class="container timer-section">
         <div class="tabs-header" id="tabsHeader">
             <button class="add-tab-btn" onclick="addNewTab()">+</button>
@@ -267,7 +282,6 @@
         </div>
     </div>
 
-    <!-- 下半部：設定區 -->
     <div class="container">
         <h2 class="with-border">計時器設定</h2>
         
@@ -641,6 +655,18 @@
     function saveTabsToStorage() {
         const dataToSave = tabs.map(t => ({ id: t.id, name: t.name }));
         localStorage.setItem(STORAGE_KEY_TABS, JSON.stringify(dataToSave));
+    }
+
+    function showTabSaveFeedback() {
+        const activePane = document.querySelector('.tab-pane.active');
+        if (!activePane) return;
+        const msgEl = activePane.querySelector('.tab-save-msg');
+        if (!msgEl) return;
+        if (msgEl.hideTimeout) clearTimeout(msgEl.hideTimeout);
+        msgEl.classList.add('show');
+        msgEl.hideTimeout = setTimeout(() => {
+            msgEl.classList.remove('show'); msgEl.hideTimeout = null;
+        }, 3000);
     }
 
     function addNewTab() {
