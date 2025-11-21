@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>每日三王計時器</title>
     
-    <!-- 新增：網頁標題圖示 (Favicon)，與 manifest 使用同一張圖 -->
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/850/850960.png">
-    
     <link rel="manifest" href="manifest.json">
+    
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -453,6 +452,13 @@
         }
     };
 
+    // --- 新增：視窗取得焦點時，清除 App 紅點 (Badge) ---
+    window.addEventListener('focus', () => {
+        if ('clearAppBadge' in navigator) {
+            navigator.clearAppBadge().catch(e => console.log(e));
+        }
+    });
+
     /* =========================================
        [核心修正] 全域計時檢查
        ========================================= */
@@ -481,6 +487,12 @@
                         const btn = document.getElementById(`btn${btnStep}-${tab.id}`);
                         markButtonAsFinished(btn);
                         sendNotification(`[${tab.name}] 計時結束`, `${btnStep}王 時間到了！`);
+                        
+                        // --- 新增：在 App 圖示上顯示紅點 ---
+                        if ('setAppBadge' in navigator) {
+                            navigator.setAppBadge(1).catch(e => console.log(e));
+                        }
+
                         tab.currentStep = null;
                     }
                 }
@@ -591,14 +603,23 @@
     function sendNotification(title, body) {
         startTitleBlink("【時間到！】" + title);
         if (Notification.permission === "granted") {
+            // --- 新增：requireInteraction 讓通知不會自動消失 (黏滯) ---
             const notification = new Notification(title, {
                 body: body,
-                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png" 
+                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png",
+                requireInteraction: true 
             });
             notification.onclick = function() {
-                window.focus(); notification.close(); stopTitleBlink();
+                window.focus(); 
+                notification.close(); 
+                stopTitleBlink();
+                // 點擊通知時也清除紅點
+                if ('clearAppBadge' in navigator) navigator.clearAppBadge();
             };
-        } else { setTimeout(() => alert(`${title}\n${body}`), 100); }
+        } else { 
+            // 如果沒權限，只能用 alert (這會強制閃爍，但體驗較差)
+            setTimeout(() => alert(`${title}\n${body}`), 100); 
+        }
     }
 
     window.onclick = function() { stopTitleBlink(); };
@@ -830,6 +851,9 @@
         document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
         
         stopTitleBlink();
+        
+        // 重置時也清除紅點
+        if ('clearAppBadge' in navigator) navigator.clearAppBadge();
     }
 
     function updateDisplay(element, seconds) {
