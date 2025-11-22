@@ -71,7 +71,7 @@
         }
         h2.with-border { border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px; margin-bottom: 10px; }
 
-        /* --- 1. 漂浮通知 (Toast) --- */
+        /* --- Toast --- */
         #toast-notification {
             position: fixed; bottom: 20px; right: 20px; background-color: var(--toast-bg); color: white;
             padding: 10px 20px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 0.9rem;
@@ -80,41 +80,25 @@
         }
         #toast-notification.show { opacity: 1; transform: translateY(0); }
 
-        /* --- 2. 修復後的 Modal 樣式 --- */
+        /* --- Modal (通用樣式) --- */
         .modal-overlay {
-            position: fixed; /* 關鍵：固定定位，讓它浮在最上層 */
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: rgba(0, 0, 0, 0.5); 
             display: flex; justify-content: center; align-items: center;
-            z-index: 10000; 
-            
-            /* 預設隱藏 */
-            opacity: 0; 
-            visibility: hidden; 
-            transition: all 0.2s ease;
-            backdrop-filter: blur(2px); /* 模糊背景特效 */
+            z-index: 10000; opacity: 0; visibility: hidden; transition: all 0.2s ease;
+            backdrop-filter: blur(2px);
         }
-        
-        /* 顯示狀態 */
-        .modal-overlay.show { 
-            opacity: 1; 
-            visibility: visible; 
-        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
 
         .modal-content {
-            background: white; 
-            padding: 25px; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
-            width: 300px; 
-            text-align: center;
-            transform: scale(0.9); 
-            transition: transform 0.2s;
+            background: white; padding: 25px; border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 300px; text-align: center;
+            transform: scale(0.9); transition: transform 0.2s;
         }
         .modal-overlay.show .modal-content { transform: scale(1); }
 
         .modal-content h3 { margin: 0 0 15px 0; color: #2c3e50; }
-        .modal-content p { margin: 0 0 10px 0; color: #555; font-size: 1rem; text-align: left; }
+        .modal-content p { margin: 0 0 20px 0; color: #555; font-size: 1rem; text-align: center; line-height: 1.5; }
         .modal-content input {
             width: 100%; padding: 10px; margin-bottom: 20px; 
             border: 1px solid #ccc; border-radius: 5px;
@@ -122,15 +106,19 @@
         }
         .modal-content input:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
 
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-buttons { display: flex; justify-content: center; gap: 10px; }
         .btn-modal {
             padding: 8px 20px; border: none; border-radius: 5px;
             cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.2s;
         }
         .btn-cancel { background: #f1f1f1; color: #333; }
         .btn-confirm { background: var(--primary-color); color: white; }
+        .btn-delete { background: var(--reset-color); color: white; } /* 刪除專用紅色 */
+        
         .btn-cancel:hover { background: #e0e0e0; }
         .btn-confirm:hover { background: #357abd; }
+        .btn-delete:hover { background: #c0392b; }
+
 
         /* Input & UI */
         .input-group { display: flex; flex-direction: column; gap: 5px; align-items: center; }
@@ -164,74 +152,50 @@
 
         /* TAG UI */
         .tab-content-wrapper {
-            background: white; 
-            border-radius: 15px 15px 0 0; 
-            padding: 10px 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            min-height: auto;
+            background: white; border-radius: 15px 15px 0 0; padding: 10px 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: auto;
             display: flex; flex-direction: column; align-items: center;
-            z-index: 2;
-            position: relative;
+            z-index: 2; position: relative;
         }
-
         .tabs-container { 
-            display: flex; 
-            background: var(--tab-bg); 
-            border-radius: 0 0 15px 15px; 
-            border-top: 1px solid var(--tab-border); 
-            padding: 8px 15px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            align-items: center;
-            overflow: hidden; 
+            display: flex; background: var(--tab-bg); border-radius: 0 0 15px 15px; 
+            border-top: 1px solid var(--tab-border); padding: 8px 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-items: center; overflow: hidden; 
         }
-
         .tabs-list {
             display: flex; overflow-x: auto; gap: 8px; flex-grow: 1; cursor: grab; 
             scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 0; 
         }
         .tabs-list::-webkit-scrollbar { display: none; }
         .tabs-list.active { cursor: grabbing; }
-
         .add-tab-wrapper {
             margin-left: 10px; flex-shrink: 0; padding-left: 10px; border-left: 1px solid #ccc; 
         }
-
         .tab-btn {
-            padding: 6px 15px; 
-            background: var(--tab-inactive-bg); 
-            border: 1px solid var(--tab-border); 
-            border-radius: 20px; 
-            cursor: pointer; font-weight: bold; color: #666;
+            padding: 6px 15px; background: var(--tab-inactive-bg); border: 1px solid var(--tab-border); 
+            border-radius: 20px; cursor: pointer; font-weight: bold; color: #666;
             display: flex; align-items: center; gap: 8px;
-            min-width: auto; justify-content: center; 
-            transition: all 0.2s; white-space: nowrap; user-select: none; 
+            min-width: auto; justify-content: center; transition: all 0.2s; white-space: nowrap; user-select: none; 
         }
-
         .tab-btn.active { 
-            background: white; color: var(--primary-color); 
-            border-color: var(--primary-color); 
+            background: white; color: var(--primary-color); border-color: var(--primary-color); 
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
         .tab-timer-mini {
             font-size: 0.85em; color: #e74c3c; font-family: 'Courier New', Courier, monospace; font-weight: bold; margin-left: 2px;
         }
         .tab-btn.active .tab-timer-mini { display: none; }
-
         .tab-close { 
-            font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; 
-            margin-left: 2px; display: none; 
+            font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; margin-left: 2px; display: none; 
         }
         .tab-btn.active .tab-close { display: inline-block; }
         .tab-close:hover { background: #ffcccc; color: #d00; }
-        
         .add-tab-btn {
             padding: 5px 12px; font-size: 18px; background: #4a90e2; color: white;
             border: none; border-radius: 50%; cursor: pointer;
             width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
         }
         .add-tab-btn:hover { background-color: #357abd; }
-
         .tab-pane { display: none; width: 100%; animation: fadeIn 0.3s; }
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -251,14 +215,11 @@
             padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
         }
         .btn-reset-top:hover { background-color: #c0392b; }
-
         .controls-wrapper { 
-            display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; 
-            margin-bottom: 5px;
+            display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; margin-bottom: 5px;
         }
         .btn-group { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; gap: 10px; }
         .btn-column { display: flex; flex-direction: column; width: 32%; gap: 10px; }
-        
         .timer-btn {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 8px 5px; border: none; border-radius: 5px; cursor: pointer; transition: all 0.2s;
@@ -272,7 +233,6 @@
         }
         .btn-title { font-size: 1.2rem; font-weight: bold; line-height: 1.2; }
         .btn-subtitle { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 2px; }
-        
         .btn-sub-reset {
             background-color: white; border: 1px solid var(--sub-reset-color); color: var(--sub-reset-color);
             padding: 5px 0; border-radius: 5px; font-size: 12px; cursor: pointer; transition: all 0.2s; width: 100%;
@@ -297,8 +257,7 @@
         
         .options-col {
             display: flex; flex-direction: column; align-items: flex-start; width: 100%;
-            padding: 10px 0; 
-            border-top: 1px solid #eee; margin-top: 0; gap: 10px;
+            padding: 10px 0; border-top: 1px solid #eee; margin-top: 0; gap: 10px;
         }
         .checkbox-wrapper { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
         .checkbox-wrapper input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
@@ -320,8 +279,7 @@
         }
         .tab-save-msg {
             font-size: 0.85rem; color: var(--info-gray); font-weight: normal;
-            height: 20px; margin-top: 0; 
-            opacity: 0; transition: opacity 0.5s ease;
+            height: 20px; margin-top: 0; opacity: 0; transition: opacity 0.5s ease;
             align-self: center; text-align: center;
         }
         .tab-save-msg.show { opacity: 1; }
@@ -330,12 +288,59 @@
             .btn-install { display: none !important; }
         }
 
+        /* --- v36 手機版自適應調整 (1. 計時器設定變為垂直) --- */
+        @media (max-width: 600px) {
+            .settings-flex-row {
+                flex-direction: column; /* 改為垂直 */
+                gap: 10px;
+            }
+            .setting-item {
+                width: 100%; /* 佔滿寬度 */
+                flex-direction: row; /* 內容改為橫向排列 (左邊標籤，右邊輸入框) */
+                justify-content: space-between;
+                padding: 10px 15px;
+            }
+            .setting-item label {
+                margin-bottom: 0; /* 移除下方邊距 */
+                font-size: 1rem;
+            }
+            .time-input-row {
+                width: auto; /* 讓輸入框靠右 */
+                justify-content: flex-end;
+            }
+        }
+
     </style>
 </head>
 <body>
 
 <!-- 全域漂浮通知 -->
 <div id="toast-notification">已儲存</div>
+
+<!-- 重新命名彈窗 -->
+<div id="renameModal" class="modal-overlay" onclick="if(event.target===this) closeRenameModal()">
+    <div class="modal-content">
+        <h3>三王計時器</h3>
+        <p>請輸入新的角色名稱：</p>
+        <input type="text" id="renameInput" onkeydown="if(event.key==='Enter') confirmRename()">
+        <div class="modal-buttons">
+            <button class="btn-modal btn-cancel" onclick="closeRenameModal()">取消</button>
+            <button class="btn-modal btn-confirm" onclick="confirmRename()">確定</button>
+        </div>
+    </div>
+</div>
+
+<!-- v36: 刪除確認彈窗 -->
+<div id="deleteModal" class="modal-overlay" onclick="if(event.target===this) closeDeleteModal()">
+    <div class="modal-content">
+        <h3>刪除確認</h3>
+        <p id="deleteMsg">確定要刪除此角色嗎？</p>
+        <div class="modal-buttons">
+            <button class="btn-modal btn-cancel" onclick="closeDeleteModal()">取消</button>
+            <button class="btn-modal btn-delete" onclick="confirmDelete()">刪除</button>
+        </div>
+    </div>
+</div>
 
 <h1>
     <img src="https://cdn-icons-png.flaticon.com/512/850/850960.png" alt="Logo">
@@ -421,21 +426,8 @@
 
 </div>
 
-<!-- 自訂彈出視窗 (移至最下方) -->
-<div id="renameModal" class="modal-overlay" onclick="if(event.target===this) closeRenameModal()">
-    <div class="modal-content">
-        <h3>三王計時器</h3>
-        <p>請輸入新的角色名稱：</p>
-        <input type="text" id="renameInput" onkeydown="if(event.key==='Enter') confirmRename()">
-        <div class="modal-buttons">
-            <button class="btn-modal btn-cancel" onclick="closeRenameModal()">取消</button>
-            <button class="btn-modal btn-confirm" onclick="confirmRename()">確定</button>
-        </div>
-    </div>
-</div>
-
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v31'; 
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v36'; 
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
     const STORAGE_KEY_CONF = 'dailyKingSettings_v2'; 
 
@@ -446,6 +438,7 @@
     let deferredPrompt;
     
     let currentRenamingId = null;
+    let currentDeletingId = null; // v36: 刪除ID
 
     let globalConfig = {
         d1: 150, d2: 80, d3: 160,
@@ -490,7 +483,7 @@
         enableDragScroll();
     };
 
-    /* Modal */
+    /* --- Modal: Rename --- */
     function openRenameModal(id) {
         const tabData = tabs.find(t => t.id === id);
         if (!tabData) return;
@@ -517,6 +510,43 @@
             }
         }
         closeRenameModal();
+    }
+
+    /* --- v36: Modal: Delete --- */
+    function openDeleteModal(id) {
+        const tabData = tabs.find(t => t.id === id);
+        if (!tabData) return;
+        currentDeletingId = id;
+        document.getElementById('deleteMsg').innerText = `確定要刪除 ${tabData.name} 嗎？`;
+        document.getElementById('deleteModal').classList.add('show');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('show');
+        currentDeletingId = null;
+    }
+    function confirmDelete() {
+        if (currentDeletingId === null) return;
+        
+        // 執行原本的刪除邏輯
+        const id = currentDeletingId;
+        const targetTab = tabs.find(t => t.id === id);
+        targetTab.endTime = null; 
+        document.getElementById(`tab-btn-${id}`).remove();
+        document.getElementById(`tab-pane-${id}`).remove();
+        tabs = tabs.filter(t => t.id !== id);
+        saveTabsToStorage();
+        
+        // 如果刪除的是當前顯示的，切換到最後一個
+        if (tabs.length > 0) {
+            // 簡單處理：若刪除後還有分頁，切換到最後一個
+            // 更好的體驗可能是切換到前一個，但這裡維持簡單邏輯
+            switchTab(tabs[tabs.length - 1].id);
+        } else {
+            addNewTab();
+        }
+        
+        showToast("已刪除分頁");
+        closeDeleteModal();
     }
 
     function enableDragScroll() {
@@ -693,7 +723,6 @@
     }
 
     function initDailyPassword() {
-        // 自動帶入：(M+D)*5
         const today = new Date();
         const m = today.getMonth() + 1; 
         const d = today.getDate();
@@ -723,7 +752,6 @@
         const inputEl = document.getElementById('decimalInput');
         const val = parseInt(inputEl.value, 10);
         if (isNaN(val) || val < 5 || val > 255 || val % 5 !== 0) return;
-        // 自動帶入模式下，手動修改也會提示
         showToast("每日密碼已儲存");
     }
 
@@ -858,10 +886,11 @@
         tabBtn.onclick = (e) => { if(e.target.classList.contains('tab-close')) return; switchTab(id); };
         tabBtn.ondblclick = () => openRenameModal(id);
         
+        // v36: 修改這裡，呼叫 openDeleteModal
         tabBtn.innerHTML = `
             <span id="tab-name-${id}">${name}</span>
             <span id="tab-timer-mini-${id}" class="tab-timer-mini"></span>
-            <span class="tab-close" onclick="removeTab(${id})">✕</span>
+            <span class="tab-close" onclick="openDeleteModal(${id})">✕</span>
         `;
         
         listContainer.appendChild(tabBtn);
@@ -918,19 +947,6 @@
             pane.classList.add('active'); 
             btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
-    }
-
-    function removeTab(id) {
-        if(!confirm('確定要刪除這個分頁嗎？')) return;
-        const targetTab = tabs.find(t => t.id === id);
-        targetTab.endTime = null; 
-        document.getElementById(`tab-btn-${id}`).remove();
-        document.getElementById(`tab-pane-${id}`).remove();
-        tabs = tabs.filter(t => t.id !== id);
-        saveTabsToStorage();
-        if (tabs.length > 0) switchTab(tabs[tabs.length - 1].id);
-        else addNewTab();
-        showToast("已刪除分頁");
     }
 
     function renameTab(id) {
