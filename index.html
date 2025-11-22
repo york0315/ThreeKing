@@ -37,7 +37,7 @@
             padding-bottom: 80px;
         }
 
-        /* --- 標題置中 --- */
+        /* --- 標題 --- */
         h1 {
             color: #2c3e50;
             margin-bottom: 15px; 
@@ -71,7 +71,7 @@
         }
         h2.with-border { border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px; margin-bottom: 10px; }
 
-        /* Toast */
+        /* --- 1. 漂浮通知 (Toast) --- */
         #toast-notification {
             position: fixed; bottom: 20px; right: 20px; background-color: var(--toast-bg); color: white;
             padding: 10px 20px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 0.9rem;
@@ -80,6 +80,59 @@
         }
         #toast-notification.show { opacity: 1; transform: translateY(0); }
 
+        /* --- 2. 修復後的 Modal 樣式 --- */
+        .modal-overlay {
+            position: fixed; /* 關鍵：固定定位，讓它浮在最上層 */
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5); 
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000; 
+            
+            /* 預設隱藏 */
+            opacity: 0; 
+            visibility: hidden; 
+            transition: all 0.2s ease;
+            backdrop-filter: blur(2px); /* 模糊背景特效 */
+        }
+        
+        /* 顯示狀態 */
+        .modal-overlay.show { 
+            opacity: 1; 
+            visibility: visible; 
+        }
+
+        .modal-content {
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
+            width: 300px; 
+            text-align: center;
+            transform: scale(0.9); 
+            transition: transform 0.2s;
+        }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+
+        .modal-content h3 { margin: 0 0 15px 0; color: #2c3e50; }
+        .modal-content p { margin: 0 0 10px 0; color: #555; font-size: 1rem; text-align: left; }
+        .modal-content input {
+            width: 100%; padding: 10px; margin-bottom: 20px; 
+            border: 1px solid #ccc; border-radius: 5px;
+            font-size: 16px; box-sizing: border-box;
+        }
+        .modal-content input:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
+
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-modal {
+            padding: 8px 20px; border: none; border-radius: 5px;
+            cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.2s;
+        }
+        .btn-cancel { background: #f1f1f1; color: #333; }
+        .btn-confirm { background: var(--primary-color); color: white; }
+        .btn-cancel:hover { background: #e0e0e0; }
+        .btn-confirm:hover { background: #357abd; }
+
+        /* Input & UI */
         .input-group { display: flex; flex-direction: column; gap: 5px; align-items: center; }
 
         #decimalInput {
@@ -284,19 +337,6 @@
 <!-- 全域漂浮通知 -->
 <div id="toast-notification">已儲存</div>
 
-<!-- 自訂彈出視窗 -->
-<div id="renameModal" class="modal-overlay" onclick="if(event.target===this) closeRenameModal()">
-    <div class="modal-content">
-        <h3>三王計時器</h3>
-        <p>請輸入新的角色名稱：</p>
-        <input type="text" id="renameInput" onkeydown="if(event.key==='Enter') confirmRename()">
-        <div class="modal-buttons">
-            <button class="btn-modal btn-cancel" onclick="closeRenameModal()">取消</button>
-            <button class="btn-modal btn-confirm" onclick="confirmRename()">確定</button>
-        </div>
-    </div>
-</div>
-
 <h1>
     <img src="https://cdn-icons-png.flaticon.com/512/850/850960.png" alt="Logo">
     三王計時器
@@ -379,6 +419,19 @@
         </button>
     </div>
 
+</div>
+
+<!-- 自訂彈出視窗 (移至最下方) -->
+<div id="renameModal" class="modal-overlay" onclick="if(event.target===this) closeRenameModal()">
+    <div class="modal-content">
+        <h3>三王計時器</h3>
+        <p>請輸入新的角色名稱：</p>
+        <input type="text" id="renameInput" onkeydown="if(event.key==='Enter') confirmRename()">
+        <div class="modal-buttons">
+            <button class="btn-modal btn-cancel" onclick="closeRenameModal()">取消</button>
+            <button class="btn-modal btn-confirm" onclick="confirmRename()">確定</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -639,18 +692,17 @@
         });
     }
 
-    /* --- v35 修改：自動帶入 (M+D)*5 --- */
     function initDailyPassword() {
-        // 新邏輯：直接使用當天日期計算，不依賴舊存檔
+        // 自動帶入：(M+D)*5
         const today = new Date();
-        const m = today.getMonth() + 1; // JS月份是0-11，所以+1
+        const m = today.getMonth() + 1; 
         const d = today.getDate();
         const val = (m + d) * 5;
         
         const input = document.getElementById('decimalInput');
         if(input) {
             input.value = val;
-            renderBinaryFromInput(); // 觸發二進位格渲染
+            renderBinaryFromInput(); 
         }
     }
 
@@ -671,8 +723,7 @@
         const inputEl = document.getElementById('decimalInput');
         const val = parseInt(inputEl.value, 10);
         if (isNaN(val) || val < 5 || val > 255 || val % 5 !== 0) return;
-        
-        // 雖然現在是自動帶入，但如果使用者手動輸入，還是可以顯示儲存提示 (不一定要存入LS，因下次載入會重算)
+        // 自動帶入模式下，手動修改也會提示
         showToast("每日密碼已儲存");
     }
 
