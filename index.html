@@ -37,7 +37,7 @@
             padding-bottom: 80px;
         }
 
-        /* 標題 */
+        /* --- 標題置中 --- */
         h1 {
             color: #2c3e50;
             margin-bottom: 15px; 
@@ -79,33 +79,6 @@
             pointer-events: none;
         }
         #toast-notification.show { opacity: 1; transform: translateY(0); }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center;
-            z-index: 10000; opacity: 0; visibility: hidden; transition: all 0.2s;
-        }
-        .modal-overlay.show { opacity: 1; visibility: visible; }
-        .modal-content {
-            background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            width: 300px; text-align: center; transform: scale(0.9); transition: transform 0.2s;
-        }
-        .modal-overlay.show .modal-content { transform: scale(1); }
-        .modal-content h3 { margin: 0 0 15px 0; color: #2c3e50; }
-        .modal-content p { margin: 0 0 10px 0; color: #555; font-size: 1rem; }
-        .modal-content input {
-            width: 100%; padding: 8px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;
-            font-size: 16px; box-sizing: border-box;
-        }
-        .modal-buttons { display: flex; justify-content: center; gap: 10px; }
-        .btn-modal {
-            padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;
-        }
-        .btn-cancel { background: #e0e0e0; color: #333; }
-        .btn-confirm { background: var(--primary-color); color: white; }
-        .btn-cancel:hover { background: #d6d6d6; }
-        .btn-confirm:hover { background: #357abd; }
 
         .input-group { display: flex; flex-direction: column; gap: 5px; align-items: center; }
 
@@ -666,28 +639,19 @@
         });
     }
 
+    /* --- v35 修改：自動帶入 (M+D)*5 --- */
     function initDailyPassword() {
-        const savedData = localStorage.getItem(STORAGE_KEY_PWD);
-        if (!savedData) return;
-        try {
-            const { refDate, refValue } = JSON.parse(savedData);
-            const storedDate = new Date(refDate); storedDate.setHours(0, 0, 0, 0);
-            const today = new Date(); today.setHours(0, 0, 0, 0);
-            const diffTime = today - storedDate;
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays === 0) {
-                document.getElementById('decimalInput').value = refValue;
-            } else {
-                const minVal = 5; const maxVal = 255; const step = 5;
-                const totalSteps = ((maxVal - minVal) / step) + 1;
-                const refIndex = (refValue - minVal) / step;
-                let newIndex = (refIndex + diffDays) % totalSteps;
-                if (newIndex < 0) newIndex += totalSteps;
-                const todayValue = (newIndex * step) + minVal;
-                document.getElementById('decimalInput').value = todayValue;
-            }
-            renderBinaryFromInput();
-        } catch (e) { localStorage.removeItem(STORAGE_KEY_PWD); }
+        // 新邏輯：直接使用當天日期計算，不依賴舊存檔
+        const today = new Date();
+        const m = today.getMonth() + 1; // JS月份是0-11，所以+1
+        const d = today.getDate();
+        const val = (m + d) * 5;
+        
+        const input = document.getElementById('decimalInput');
+        if(input) {
+            input.value = val;
+            renderBinaryFromInput(); // 觸發二進位格渲染
+        }
     }
 
     function handleInputVisual() {
@@ -707,9 +671,8 @@
         const inputEl = document.getElementById('decimalInput');
         const val = parseInt(inputEl.value, 10);
         if (isNaN(val) || val < 5 || val > 255 || val % 5 !== 0) return;
-        const today = new Date(); today.setHours(0, 0, 0, 0);
-        const dataToSave = { refDate: today.toISOString(), refValue: val };
-        localStorage.setItem(STORAGE_KEY_PWD, JSON.stringify(dataToSave));
+        
+        // 雖然現在是自動帶入，但如果使用者手動輸入，還是可以顯示儲存提示 (不一定要存入LS，因下次載入會重算)
         showToast("每日密碼已儲存");
     }
 
@@ -773,7 +736,6 @@
                         const nextBtn = document.getElementById(`btn${nextStep}-${tabId}`);
                         if (nextBtn && !nextBtn.disabled) nextBtn.click(); 
                         
-                        // v34 修正：自動切換分頁
                         switchTab(tabId);
                     }
                 }
