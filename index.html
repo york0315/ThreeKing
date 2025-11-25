@@ -80,7 +80,7 @@
         }
         #toast-notification.show { opacity: 1; transform: translateY(0); }
 
-        /* --- Modal (通用樣式) --- */
+        /* --- Modal --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: rgba(0, 0, 0, 0.5); 
@@ -113,7 +113,7 @@
         }
         .btn-cancel { background: #f1f1f1; color: #333; }
         .btn-confirm { background: var(--primary-color); color: white; }
-        .btn-delete { background: var(--reset-color); color: white; } /* 刪除專用紅色 */
+        .btn-delete { background: var(--reset-color); color: white; } 
         
         .btn-cancel:hover { background: #e0e0e0; }
         .btn-confirm:hover { background: #357abd; }
@@ -178,15 +178,16 @@
             min-width: auto; justify-content: center; transition: all 0.2s; white-space: nowrap; user-select: none; 
         }
         .tab-btn.active { 
-            background: white; color: var(--primary-color); border-color: var(--primary-color); 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white; color: var(--primary-color); 
+            border-color: var(--primary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .tab-timer-mini {
             font-size: 0.85em; color: #e74c3c; font-family: 'Courier New', Courier, monospace; font-weight: bold; margin-left: 2px;
         }
         .tab-btn.active .tab-timer-mini { display: none; }
         .tab-close { 
-            font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; margin-left: 2px; display: none; 
+            font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; 
+            margin-left: 2px; display: none; 
         }
         .tab-btn.active .tab-close { display: inline-block; }
         .tab-close:hover { background: #ffcccc; color: #d00; }
@@ -287,27 +288,11 @@
         @media all and (display-mode: standalone) {
             .btn-install { display: none !important; }
         }
-
-        /* --- v36 手機版自適應調整 (1. 計時器設定變為垂直) --- */
         @media (max-width: 600px) {
-            .settings-flex-row {
-                flex-direction: column; /* 改為垂直 */
-                gap: 10px;
-            }
-            .setting-item {
-                width: 100%; /* 佔滿寬度 */
-                flex-direction: row; /* 內容改為橫向排列 (左邊標籤，右邊輸入框) */
-                justify-content: space-between;
-                padding: 10px 15px;
-            }
-            .setting-item label {
-                margin-bottom: 0; /* 移除下方邊距 */
-                font-size: 1rem;
-            }
-            .time-input-row {
-                width: auto; /* 讓輸入框靠右 */
-                justify-content: flex-end;
-            }
+            .settings-flex-row { flex-direction: column; gap: 10px; }
+            .setting-item { width: 100%; flex-direction: row; justify-content: space-between; padding: 10px 15px; }
+            .setting-item label { margin-bottom: 0; font-size: 1rem; }
+            .time-input-row { width: auto; justify-content: flex-end; }
         }
 
     </style>
@@ -330,7 +315,7 @@
     </div>
 </div>
 
-<!-- v36: 刪除確認彈窗 -->
+<!-- 刪除確認彈窗 -->
 <div id="deleteModal" class="modal-overlay" onclick="if(event.target===this) closeDeleteModal()">
     <div class="modal-content">
         <h3>刪除確認</h3>
@@ -414,6 +399,13 @@
                 <input type="checkbox" id="conf-notify" checked onchange="saveSettings(true)">
                 顯示系統通知
             </label>
+
+            <!-- v37 新增：結束通知刷新 -->
+            <label class="checkbox-wrapper">
+                <input type="checkbox" id="conf-reset-on-finish" checked onchange="saveSettings(true)">
+                結束通知刷新
+            </label>
+
             <div id="perm-hint" class="permission-hint">
                 ⚠️ 系統通知已被封鎖，請點擊網址列鎖頭圖示開啟權限。
             </div>
@@ -427,9 +419,9 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v36'; 
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v37'; 
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
-    const STORAGE_KEY_CONF = 'dailyKingSettings_v2'; 
+    const STORAGE_KEY_CONF = 'dailyKingSettings_v3'; 
 
     let notificationPermission = "default";
     let blinkInterval = null; 
@@ -438,11 +430,12 @@
     let deferredPrompt;
     
     let currentRenamingId = null;
-    let currentDeletingId = null; // v36: 刪除ID
+    let currentDeletingId = null;
 
     let globalConfig = {
         d1: 150, d2: 80, d3: 160,
-        autoNext: false, notify: true
+        autoNext: false, notify: true,
+        resetOnFinish: true // 預設開啟
     };
 
     const workerBlob = new Blob([`
@@ -483,7 +476,7 @@
         enableDragScroll();
     };
 
-    /* --- Modal: Rename --- */
+    /* Modals */
     function openRenameModal(id) {
         const tabData = tabs.find(t => t.id === id);
         if (!tabData) return;
@@ -511,8 +504,6 @@
         }
         closeRenameModal();
     }
-
-    /* --- v36: Modal: Delete --- */
     function openDeleteModal(id) {
         const tabData = tabs.find(t => t.id === id);
         if (!tabData) return;
@@ -526,8 +517,6 @@
     }
     function confirmDelete() {
         if (currentDeletingId === null) return;
-        
-        // 執行原本的刪除邏輯
         const id = currentDeletingId;
         const targetTab = tabs.find(t => t.id === id);
         targetTab.endTime = null; 
@@ -535,16 +524,7 @@
         document.getElementById(`tab-pane-${id}`).remove();
         tabs = tabs.filter(t => t.id !== id);
         saveTabsToStorage();
-        
-        // 如果刪除的是當前顯示的，切換到最後一個
-        if (tabs.length > 0) {
-            // 簡單處理：若刪除後還有分頁，切換到最後一個
-            // 更好的體驗可能是切換到前一個，但這裡維持簡單邏輯
-            switchTab(tabs[tabs.length - 1].id);
-        } else {
-            addNewTab();
-        }
-        
+        if (tabs.length > 0) switchTab(tabs[tabs.length - 1].id); else addNewTab();
         showToast("已刪除分頁");
         closeDeleteModal();
     }
@@ -575,24 +555,20 @@
 
     function showToast(msg) {
         const toast = document.getElementById('toast-notification');
-        toast.innerText = msg;
-        toast.classList.add('show');
+        toast.innerText = msg; toast.classList.add('show');
         if (toastTimeout) clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, 2000);
+        toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2000);
     }
 
     function loadSettings() {
         const savedConf = localStorage.getItem(STORAGE_KEY_CONF);
-        if (savedConf) {
-            globalConfig = { ...globalConfig, ...JSON.parse(savedConf) };
-        }
+        if (savedConf) { globalConfig = { ...globalConfig, ...JSON.parse(savedConf) }; }
         fillTimeInputs('conf-d1', globalConfig.d1);
         fillTimeInputs('conf-d2', globalConfig.d2);
         fillTimeInputs('conf-d3', globalConfig.d3);
         document.getElementById('conf-auto-next').checked = globalConfig.autoNext;
         document.getElementById('conf-notify').checked = globalConfig.notify;
+        document.getElementById('conf-reset-on-finish').checked = globalConfig.resetOnFinish;
         handleAutoNextChange(false);
     }
 
@@ -609,10 +585,10 @@
         globalConfig.d3 = getTimeFromInputs('conf-d3');
         globalConfig.autoNext = document.getElementById('conf-auto-next').checked;
         globalConfig.notify = document.getElementById('conf-notify').checked;
+        globalConfig.resetOnFinish = document.getElementById('conf-reset-on-finish').checked;
 
         localStorage.setItem(STORAGE_KEY_CONF, JSON.stringify(globalConfig));
         updateAllButtonLabels();
-        
         if (showToastFlag) showToast("設定已儲存");
     }
 
@@ -626,14 +602,8 @@
         const isAuto = document.getElementById('conf-auto-next').checked;
         const notifyCb = document.getElementById('conf-notify');
         const notifyLbl = document.getElementById('lbl-notify');
-
-        if (isAuto) {
-            notifyCb.disabled = true;
-            notifyLbl.classList.add('disabled');
-        } else {
-            notifyCb.disabled = false;
-            notifyLbl.classList.remove('disabled');
-        }
+        if (isAuto) { notifyCb.disabled = true; notifyLbl.classList.add('disabled'); }
+        else { notifyCb.disabled = false; notifyLbl.classList.remove('disabled'); }
         if (shouldSave) saveSettings(true);
     }
 
@@ -662,13 +632,13 @@
             const btn1 = document.getElementById(`btn1-${tab.id}`);
             const btn2 = document.getElementById(`btn2-${tab.id}`);
             const btn3 = document.getElementById(`btn3-${tab.id}`);
-            
             if (btn1) btn1.querySelector('.btn-subtitle').innerText = formatTimeText(globalConfig.d1);
             if (btn2) btn2.querySelector('.btn-subtitle').innerText = formatTimeText(globalConfig.d2);
             if (btn3) btn3.querySelector('.btn-subtitle').innerText = formatTimeText(globalConfig.d3);
         });
     }
 
+    /* 核心計時 */
     function checkAllTimers() {
         const now = Date.now();
         tabs.forEach(tab => {
@@ -689,7 +659,6 @@
 
                 if (remaining <= 0) {
                     tab.endTime = null; tab.finished = true; 
-                    
                     if (tabTimerMini) tabTimerMini.innerText = "";
 
                     const btnStep = tab.currentStep; 
@@ -697,15 +666,19 @@
                         const btn = document.getElementById(`btn${btnStep}-${tab.id}`);
                         markButtonAsFinished(btn);
                         tab.currentStep = null;
+
+                        // 自動點擊
                         if (globalConfig.autoNext) {
                             const nextStep = btnStep + 1;
                             if (nextStep <= 3) {
                                 const nextBtn = document.getElementById(`btn${nextStep}-${tab.id}`);
                                 if (nextBtn && !nextBtn.disabled) setTimeout(() => nextBtn.click(), 500);
                             } else {
-                                sendNotification(`[${tab.name}]`, `全部通關完成！`, null, null);
+                                // 3王結束
+                                sendNotification(`[${tab.name}]`, `全部通關完成！`, tab.id, 3);
                             }
                         } else {
+                            // 手動
                             if (globalConfig.notify) {
                                 sendNotification(
                                     `[${tab.name}] 計時結束`, 
@@ -727,7 +700,6 @@
         const m = today.getMonth() + 1; 
         const d = today.getDate();
         const val = (m + d) * 5;
-        
         const input = document.getElementById('decimalInput');
         if(input) {
             input.value = val;
@@ -809,13 +781,22 @@
             notification.onclick = function() {
                 window.focus(); notification.close(); stopTitleBlink();
                 if ('clearAppBadge' in navigator) navigator.clearAppBadge();
-                if (tabId && finishedStep && !globalConfig.autoNext) {
-                    const nextStep = finishedStep + 1;
-                    if (nextStep <= 3) {
-                        const nextBtn = document.getElementById(`btn${nextStep}-${tabId}`);
-                        if (nextBtn && !nextBtn.disabled) nextBtn.click(); 
-                        
+                
+                if (tabId && finishedStep) {
+                    // v37: 結束通知刷新邏輯
+                    if (finishedStep === 3 && globalConfig.resetOnFinish) {
                         switchTab(tabId);
+                        resetTabTimer(tabId);
+                        return; 
+                    }
+
+                    if (!globalConfig.autoNext) {
+                        const nextStep = finishedStep + 1;
+                        if (nextStep <= 3) {
+                            const nextBtn = document.getElementById(`btn${nextStep}-${tabId}`);
+                            if (nextBtn && !nextBtn.disabled) nextBtn.click(); 
+                            switchTab(tabId);
+                        }
                     }
                 }
             };
@@ -886,7 +867,6 @@
         tabBtn.onclick = (e) => { if(e.target.classList.contains('tab-close')) return; switchTab(id); };
         tabBtn.ondblclick = () => openRenameModal(id);
         
-        // v36: 修改這裡，呼叫 openDeleteModal
         tabBtn.innerHTML = `
             <span id="tab-name-${id}">${name}</span>
             <span id="tab-timer-mini-${id}" class="tab-timer-mini"></span>
@@ -949,16 +929,12 @@
         }
     }
 
+    function removeTab(id) {
+        if(!confirm('確定要刪除這個分頁嗎？')) return; // Fallback
+    }
+
     function renameTab(id) {
-        const tabData = tabs.find(t => t.id === id);
-        if(!tabData) return;
-        const newName = prompt("請輸入新的標籤名稱：", tabData.name);
-        if(newName && newName.trim() !== "") {
-            tabData.name = newName;
-            document.getElementById(`tab-name-${id}`).innerText = newName;
-            saveTabsToStorage();
-            showToast("分頁名稱已儲存");
-        }
+        // Fallback
     }
 
     function markButtonAsFinished(btnElement) {
