@@ -37,7 +37,7 @@
             padding-bottom: 80px;
         }
 
-        /* --- 標題 --- */
+        /* 標題 */
         h1 {
             color: #2c3e50;
             margin-bottom: 15px; 
@@ -71,7 +71,7 @@
         }
         h2.with-border { border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px; margin-bottom: 10px; }
 
-        /* --- Toast --- */
+        /* Toast */
         #toast-notification {
             position: fixed; bottom: 20px; right: 20px; background-color: var(--toast-bg); color: white;
             padding: 10px 20px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 0.9rem;
@@ -80,7 +80,7 @@
         }
         #toast-notification.show { opacity: 1; transform: translateY(0); }
 
-        /* --- Modal --- */
+        /* Modal */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: rgba(0, 0, 0, 0.5); 
@@ -219,14 +219,20 @@
         }
         .btn-reset-top:hover { background-color: #c0392b; }
 
-        /* v38: 啟動通知按鈕 (左上，與重置鈕對稱) */
+        /* 啟動通知按鈕 (左上) */
         .btn-start-notify {
             position: absolute; left: 0; top: 8px; transform: none;
             background-color: var(--primary-color); color: white; border: none;
             padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
         }
-        .btn-start-notify:hover { background-color: #357abd; }
-
+        .btn-start-notify:hover:not(:disabled) { background-color: #357abd; }
+        
+        /* v39: 啟動通知按鈕禁用樣式 */
+        .btn-start-notify:disabled {
+            background-color: var(--disabled-color);
+            color: #888;
+            cursor: not-allowed;
+        }
 
         .controls-wrapper { 
             display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; margin-bottom: 5px;
@@ -430,7 +436,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v38'; // 版本更新
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v39'; 
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
     const STORAGE_KEY_CONF = 'dailyKingSettings_v3'; 
 
@@ -487,13 +493,16 @@
         enableDragScroll();
     };
 
-    // --- v38 新功能：觸發啟動通知 ---
+    // --- v39: 觸發啟動通知 ---
     function triggerStartNotification(tabId) {
         if (Notification.permission === "granted") {
+            // 立即鎖定按鈕
+            const notifyBtn = document.getElementById(`btn-start-notify-${tabId}`);
+            if(notifyBtn) notifyBtn.disabled = true;
+
             const tabData = tabs.find(t => t.id === tabId);
             const tabName = tabData ? tabData.name : "角色";
 
-            // 發送黏滯通知
             const notification = new Notification(`[${tabName}] 準備就緒`, {
                 body: "👉 點擊此通知可立即啟動 1王 倒數",
                 icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png",
@@ -504,12 +513,9 @@
                 window.focus(); 
                 notification.close(); 
                 
-                // 點擊後嘗試啟動 1王
                 const btn1 = document.getElementById(`btn1-${tabId}`);
                 if (btn1 && !btn1.disabled) {
                     btn1.click();
-                } else {
-                    alert("1王 已經在運行中或已結束");
                 }
             };
         } else {
@@ -921,9 +927,10 @@
         const t2 = formatTimeText(globalConfig.d2);
         const t3 = formatTimeText(globalConfig.d3);
 
+        // v39: 增加 id 以便控制 disabled
         pane.innerHTML = `
             <div class="timer-display-row">
-                <button class="btn-start-notify" onclick="triggerStartNotification(${id})">啟動通知</button>
+                <button id="btn-start-notify-${id}" class="btn-start-notify" onclick="triggerStartNotification(${id})">啟動通知</button>
                 <div class="timer-display" id="timer-display-${id}">00:00</div>
                 <button class="btn-reset-top" onclick="resetTabTimer(${id})">全部重置</button>
             </div>
@@ -968,11 +975,28 @@
     }
 
     function removeTab(id) {
-        if(!confirm('確定要刪除這個分頁嗎？')) return; // Fallback
+        if(!confirm('確定要刪除這個分頁嗎？')) return;
+        const targetTab = tabs.find(t => t.id === id);
+        targetTab.endTime = null; 
+        document.getElementById(`tab-btn-${id}`).remove();
+        document.getElementById(`tab-pane-${id}`).remove();
+        tabs = tabs.filter(t => t.id !== id);
+        saveTabsToStorage();
+        if (tabs.length > 0) switchTab(tabs[tabs.length - 1].id);
+        else addNewTab();
+        showToast("已刪除分頁");
     }
 
     function renameTab(id) {
-        // Fallback
+        const tabData = tabs.find(t => t.id === id);
+        if(!tabData) return;
+        const newName = prompt("請輸入新的標籤名稱：", tabData.name);
+        if(newName && newName.trim() !== "") {
+            tabData.name = newName;
+            document.getElementById(`tab-name-${id}`).innerText = newName;
+            saveTabsToStorage();
+            showToast("分頁名稱已儲存");
+        }
     }
 
     function markButtonAsFinished(btnElement) {
@@ -1002,6 +1026,10 @@
         if (btnStep === 3 && btn3.disabled) return;
 
         document.getElementById(`sub-reset-btn${btnStep}-${tabId}`).disabled = false;
+        
+        // v39: 鎖定 啟動通知 按鈕
+        const notifyBtn = document.getElementById(`btn-start-notify-${tabId}`);
+        if(notifyBtn) notifyBtn.disabled = true;
 
         if (btnStep === 1) {
             btn1.disabled = true; btn2.disabled = false;
@@ -1040,6 +1068,12 @@
         const t2 = formatTimeText(globalConfig.d2);
         const t3 = formatTimeText(globalConfig.d3);
 
+        // v39: 若重置的是 1王，代表全重置，解鎖啟動通知按鈕
+        if (btnStep === 1) {
+             const notifyBtn = document.getElementById(`btn-start-notify-${tabId}`);
+             if(notifyBtn) notifyBtn.disabled = false;
+        }
+
         if (btnStep === 1) {
             restoreButtonState(btn1, "1王", t1); btn1.disabled = false;
             restoreButtonState(btn2, "2王", t2); btn2.disabled = true; document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
@@ -1077,6 +1111,10 @@
         document.getElementById(`sub-reset-btn1-${tabId}`).disabled = true;
         document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
         document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
+        
+        // v39: 全重置時，解鎖啟動通知按鈕
+        const notifyBtn = document.getElementById(`btn-start-notify-${tabId}`);
+        if(notifyBtn) notifyBtn.disabled = false;
         
         stopTitleBlink();
         if ('clearAppBadge' in navigator) navigator.clearAppBadge();
