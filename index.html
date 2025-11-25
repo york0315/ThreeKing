@@ -210,12 +210,24 @@
             font-size: 3.5rem; font-family: 'Courier New', Courier, monospace;
             color: #333; font-weight: bold; margin: 0; padding: 0; line-height: 1;
         }
+
+        /* 全部重置按鈕 (右上) */
         .btn-reset-top {
             position: absolute; right: 0; top: 8px; transform: none;
             background-color: var(--reset-color); color: white; border: none;
             padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
         }
         .btn-reset-top:hover { background-color: #c0392b; }
+
+        /* v38: 啟動通知按鈕 (左上，與重置鈕對稱) */
+        .btn-start-notify {
+            position: absolute; left: 0; top: 8px; transform: none;
+            background-color: var(--primary-color); color: white; border: none;
+            padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
+        }
+        .btn-start-notify:hover { background-color: #357abd; }
+
+
         .controls-wrapper { 
             display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; margin-bottom: 5px;
         }
@@ -400,7 +412,6 @@
                 顯示系統通知
             </label>
 
-            <!-- v37 新增：結束通知刷新 -->
             <label class="checkbox-wrapper">
                 <input type="checkbox" id="conf-reset-on-finish" checked onchange="saveSettings(true)">
                 結束通知刷新
@@ -419,7 +430,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v37'; 
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v38'; // 版本更新
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
     const STORAGE_KEY_CONF = 'dailyKingSettings_v3'; 
 
@@ -435,7 +446,7 @@
     let globalConfig = {
         d1: 150, d2: 80, d3: 160,
         autoNext: false, notify: true,
-        resetOnFinish: true // 預設開啟
+        resetOnFinish: true
     };
 
     const workerBlob = new Blob([`
@@ -475,6 +486,36 @@
         checkNotificationPermission();
         enableDragScroll();
     };
+
+    // --- v38 新功能：觸發啟動通知 ---
+    function triggerStartNotification(tabId) {
+        if (Notification.permission === "granted") {
+            const tabData = tabs.find(t => t.id === tabId);
+            const tabName = tabData ? tabData.name : "角色";
+
+            // 發送黏滯通知
+            const notification = new Notification(`[${tabName}] 準備就緒`, {
+                body: "👉 點擊此通知可立即啟動 1王 倒數",
+                icon: "https://cdn-icons-png.flaticon.com/512/850/850960.png",
+                requireInteraction: true 
+            });
+
+            notification.onclick = function() {
+                window.focus(); 
+                notification.close(); 
+                
+                // 點擊後嘗試啟動 1王
+                const btn1 = document.getElementById(`btn1-${tabId}`);
+                if (btn1 && !btn1.disabled) {
+                    btn1.click();
+                } else {
+                    alert("1王 已經在運行中或已結束");
+                }
+            };
+        } else {
+            alert("請先允許通知權限，才能使用此功能。");
+        }
+    }
 
     /* Modals */
     function openRenameModal(id) {
@@ -667,18 +708,15 @@
                         markButtonAsFinished(btn);
                         tab.currentStep = null;
 
-                        // 自動點擊
                         if (globalConfig.autoNext) {
                             const nextStep = btnStep + 1;
                             if (nextStep <= 3) {
                                 const nextBtn = document.getElementById(`btn${nextStep}-${tab.id}`);
                                 if (nextBtn && !nextBtn.disabled) setTimeout(() => nextBtn.click(), 500);
                             } else {
-                                // 3王結束
                                 sendNotification(`[${tab.name}]`, `全部通關完成！`, tab.id, 3);
                             }
                         } else {
-                            // 手動
                             if (globalConfig.notify) {
                                 sendNotification(
                                     `[${tab.name}] 計時結束`, 
@@ -783,7 +821,6 @@
                 if ('clearAppBadge' in navigator) navigator.clearAppBadge();
                 
                 if (tabId && finishedStep) {
-                    // v37: 結束通知刷新邏輯
                     if (finishedStep === 3 && globalConfig.resetOnFinish) {
                         switchTab(tabId);
                         resetTabTimer(tabId);
@@ -886,6 +923,7 @@
 
         pane.innerHTML = `
             <div class="timer-display-row">
+                <button class="btn-start-notify" onclick="triggerStartNotification(${id})">啟動通知</button>
                 <div class="timer-display" id="timer-display-${id}">00:00</div>
                 <button class="btn-reset-top" onclick="resetTabTimer(${id})">全部重置</button>
             </div>
