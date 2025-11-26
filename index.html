@@ -37,7 +37,7 @@
             padding-bottom: 80px;
         }
 
-        /* 標題 */
+        /* --- 標題置中 --- */
         h1 {
             color: #2c3e50;
             margin-bottom: 15px; 
@@ -83,52 +83,68 @@
         /* Modal */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: rgba(0, 0, 0, 0.5); 
-            display: flex; justify-content: center; align-items: center;
-            z-index: 10000; opacity: 0; visibility: hidden; transition: all 0.2s ease;
-            backdrop-filter: blur(2px);
+            background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center;
+            z-index: 10000; opacity: 0; visibility: hidden; transition: all 0.2s ease; backdrop-filter: blur(2px);
         }
         .modal-overlay.show { opacity: 1; visibility: visible; }
-
         .modal-content {
-            background: white; padding: 25px; border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 300px; text-align: center;
-            transform: scale(0.9); transition: transform 0.2s;
+            background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 300px; text-align: center; transform: scale(0.9); transition: transform 0.2s;
         }
         .modal-overlay.show .modal-content { transform: scale(1); }
-
         .modal-content h3 { margin: 0 0 15px 0; color: #2c3e50; }
         .modal-content p { margin: 0 0 20px 0; color: #555; font-size: 1rem; text-align: center; line-height: 1.5; }
         .modal-content input {
-            width: 100%; padding: 10px; margin-bottom: 20px; 
-            border: 1px solid #ccc; border-radius: 5px;
+            width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px;
             font-size: 16px; box-sizing: border-box;
         }
         .modal-content input:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
-
         .modal-buttons { display: flex; justify-content: center; gap: 10px; }
         .btn-modal {
-            padding: 8px 20px; border: none; border-radius: 5px;
-            cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.2s;
+            padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.2s;
         }
         .btn-cancel { background: #f1f1f1; color: #333; }
         .btn-confirm { background: var(--primary-color); color: white; }
         .btn-delete { background: var(--reset-color); color: white; } 
-        
         .btn-cancel:hover { background: #e0e0e0; }
         .btn-confirm:hover { background: #357abd; }
         .btn-delete:hover { background: #c0392b; }
 
-
         /* Input & UI */
         .input-group { display: flex; flex-direction: column; gap: 5px; align-items: center; }
+
+        /* v40: 新增密碼輸入列容器 (Input + Button) */
+        .password-row {
+            display: flex;
+            gap: 5px;
+            width: 315px; /* 固定寬度對齊下方 */
+            max-width: 100%;
+        }
 
         #decimalInput {
             padding: 8px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px;
             text-align: center; font-weight: bold; color: #2c3e50;
-            width: 315px; max-width: 100%; box-sizing: border-box;
+            flex-grow: 1; /* 自動填滿 */
+            width: auto; /* 覆蓋舊設定 */
+            box-sizing: border-box;
         }
         #decimalInput.invalid { border-color: #e74c3c; background-color: #fdecec; }
+
+        /* v40: 密碼重置按鈕 */
+        .btn-pw-reset {
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 40px; /* 方正 */
+            flex-shrink: 0;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-pw-reset:hover { background-color: #e0e0e0; color: #333; }
+        .btn-pw-reset:active { transform: rotate(180deg); transition: transform 0.3s; }
 
         .setting-input-sm {
             width: 50px !important; padding: 5px; text-align: center;
@@ -168,27 +184,20 @@
         }
         .tabs-list::-webkit-scrollbar { display: none; }
         .tabs-list.active { cursor: grabbing; }
-        .add-tab-wrapper {
-            margin-left: 10px; flex-shrink: 0; padding-left: 10px; border-left: 1px solid #ccc; 
-        }
+        .add-tab-wrapper { margin-left: 10px; flex-shrink: 0; padding-left: 10px; border-left: 1px solid #ccc; }
         .tab-btn {
             padding: 6px 15px; background: var(--tab-inactive-bg); border: 1px solid var(--tab-border); 
             border-radius: 20px; cursor: pointer; font-weight: bold; color: #666;
-            display: flex; align-items: center; gap: 8px;
-            min-width: auto; justify-content: center; transition: all 0.2s; white-space: nowrap; user-select: none; 
+            display: flex; align-items: center; gap: 8px; min-width: auto; justify-content: center; 
+            transition: all 0.2s; white-space: nowrap; user-select: none; 
         }
         .tab-btn.active { 
             background: white; color: var(--primary-color); 
             border-color: var(--primary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .tab-timer-mini {
-            font-size: 0.85em; color: #e74c3c; font-family: 'Courier New', Courier, monospace; font-weight: bold; margin-left: 2px;
-        }
+        .tab-timer-mini { font-size: 0.85em; color: #e74c3c; font-family: 'Courier New', Courier, monospace; font-weight: bold; margin-left: 2px; }
         .tab-btn.active .tab-timer-mini { display: none; }
-        .tab-close { 
-            font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; 
-            margin-left: 2px; display: none; 
-        }
+        .tab-close { font-size: 12px; color: #999; padding: 2px 6px; border-radius: 50%; margin-left: 2px; display: none; }
         .tab-btn.active .tab-close { display: inline-block; }
         .tab-close:hover { background: #ffcccc; color: #d00; }
         .add-tab-btn {
@@ -210,29 +219,19 @@
             font-size: 3.5rem; font-family: 'Courier New', Courier, monospace;
             color: #333; font-weight: bold; margin: 0; padding: 0; line-height: 1;
         }
-
-        /* 全部重置按鈕 (右上) */
         .btn-reset-top {
             position: absolute; right: 0; top: 8px; transform: none;
             background-color: var(--reset-color); color: white; border: none;
             padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
         }
         .btn-reset-top:hover { background-color: #c0392b; }
-
-        /* 啟動通知按鈕 (左上) */
         .btn-start-notify {
             position: absolute; left: 0; top: 8px; transform: none;
             background-color: var(--primary-color); color: white; border: none;
             padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
         }
         .btn-start-notify:hover:not(:disabled) { background-color: #357abd; }
-        
-        /* v39: 啟動通知按鈕禁用樣式 */
-        .btn-start-notify:disabled {
-            background-color: var(--disabled-color);
-            color: #888;
-            cursor: not-allowed;
-        }
+        .btn-start-notify:disabled { background-color: var(--disabled-color); color: #888; cursor: not-allowed; }
 
         .controls-wrapper { 
             display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; margin: 0 auto; margin-bottom: 5px;
@@ -269,10 +268,7 @@
             width: 32%; box-sizing: border-box;
         }
         .setting-item label { font-size: 0.9rem; color: #555; margin-bottom: 5px; font-weight: bold; }
-        
-        .time-input-row {
-            display: flex; align-items: center; gap: 2px; justify-content: center; width: 100%; font-size: 12px;
-        }
+        .time-input-row { display: flex; align-items: center; gap: 2px; justify-content: center; width: 100%; font-size: 12px; }
         
         .options-col {
             display: flex; flex-direction: column; align-items: flex-start; width: 100%;
@@ -303,9 +299,7 @@
         }
         .tab-save-msg.show { opacity: 1; }
 
-        @media all and (display-mode: standalone) {
-            .btn-install { display: none !important; }
-        }
+        @media all and (display-mode: standalone) { .btn-install { display: none !important; } }
         @media (max-width: 600px) {
             .settings-flex-row { flex-direction: column; gap: 10px; }
             .setting-item { width: 100%; flex-direction: row; justify-content: space-between; padding: 10px 15px; }
@@ -357,9 +351,14 @@
         <div id="saveMsg" class="save-msg">(已記錄當下密碼)</div>
         
         <div class="input-group">
-            <input type="number" id="decimalInput" placeholder="請輸入5的倍數 (例如 160)" min="5" max="255" step="5" 
-                   oninput="handleInputVisual()" 
-                   onblur="handleInputSave()">
+            <!-- v40: 新增容器以容納按鈕 -->
+            <div class="password-row">
+                <input type="number" id="decimalInput" placeholder="請輸入5的倍數 (例如 160)" min="5" max="255" step="5" 
+                       oninput="handleInputVisual()" 
+                       onblur="handleInputSave()">
+                <button class="btn-pw-reset" onclick="initDailyPassword(true)" title="重置為今日預設值">⟳</button>
+            </div>
+
             <div id="errorMsg" class="error-msg"></div>
             <div id="binaryContainer" class="binary-container"></div>
         </div>
@@ -423,6 +422,12 @@
                 結束通知刷新
             </label>
 
+            <!-- v40: 取消 F5 重置 -->
+            <label class="checkbox-wrapper">
+                <input type="checkbox" id="conf-block-f5" checked onchange="saveSettings(true)">
+                取消F5重置
+            </label>
+
             <div id="perm-hint" class="permission-hint">
                 ⚠️ 系統通知已被封鎖，請點擊網址列鎖頭圖示開啟權限。
             </div>
@@ -436,7 +441,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v39'; 
+    const STORAGE_KEY_TABS = 'dailyKingTimerTabs_v40'; 
     const STORAGE_KEY_PWD = 'dailyKingPasswordRef_v2';
     const STORAGE_KEY_CONF = 'dailyKingSettings_v3'; 
 
@@ -452,7 +457,8 @@
     let globalConfig = {
         d1: 150, d2: 80, d3: 160,
         autoNext: false, notify: true,
-        resetOnFinish: true
+        resetOnFinish: true,
+        blockF5: true // v40 預設開啟
     };
 
     const workerBlob = new Blob([`
@@ -464,6 +470,16 @@
     timerWorker.onmessage = function(e) {
         if (e.data === 'tick') checkAllTimers(); 
     };
+
+    // --- v40: 阻擋 F5 ---
+    window.addEventListener('keydown', function(e) {
+        if (globalConfig.blockF5) {
+            if ((e.which || e.keyCode) === 116 || (e.ctrlKey && e.key === 'r') || (e.metaKey && e.key === 'r')) {
+                e.preventDefault();
+                showToast("F5 重置已鎖定");
+            }
+        }
+    });
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -493,10 +509,8 @@
         enableDragScroll();
     };
 
-    // --- v39: 觸發啟動通知 ---
     function triggerStartNotification(tabId) {
         if (Notification.permission === "granted") {
-            // 立即鎖定按鈕
             const notifyBtn = document.getElementById(`btn-start-notify-${tabId}`);
             if(notifyBtn) notifyBtn.disabled = true;
 
@@ -510,13 +524,9 @@
             });
 
             notification.onclick = function() {
-                window.focus(); 
-                notification.close(); 
-                
+                window.focus(); notification.close(); 
                 const btn1 = document.getElementById(`btn1-${tabId}`);
-                if (btn1 && !btn1.disabled) {
-                    btn1.click();
-                }
+                if (btn1 && !btn1.disabled) btn1.click();
             };
         } else {
             alert("請先允許通知權限，才能使用此功能。");
@@ -578,9 +588,7 @@
 
     function enableDragScroll() {
         const slider = document.getElementById('tabsList');
-        let isDown = false;
-        let startX;
-        let scrollLeft;
+        let isDown = false; let startX; let scrollLeft;
         slider.addEventListener('mousedown', (e) => {
             isDown = true; slider.classList.add('active');
             startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft;
@@ -588,10 +596,8 @@
         slider.addEventListener('mouseleave', () => { isDown = false; slider.classList.remove('active'); });
         slider.addEventListener('mouseup', () => { isDown = false; slider.classList.remove('active'); });
         slider.addEventListener('mousemove', (e) => {
-            if (!isDown) return;
-            e.preventDefault();
-            const x = e.pageX - slider.offsetLeft;
-            const walk = (x - startX) * 2; 
+            if (!isDown) return; e.preventDefault();
+            const x = e.pageX - slider.offsetLeft; const walk = (x - startX) * 2; 
             slider.scrollLeft = scrollLeft - walk;
         });
     }
@@ -616,6 +622,7 @@
         document.getElementById('conf-auto-next').checked = globalConfig.autoNext;
         document.getElementById('conf-notify').checked = globalConfig.notify;
         document.getElementById('conf-reset-on-finish').checked = globalConfig.resetOnFinish;
+        document.getElementById('conf-block-f5').checked = globalConfig.blockF5;
         handleAutoNextChange(false);
     }
 
@@ -633,6 +640,7 @@
         globalConfig.autoNext = document.getElementById('conf-auto-next').checked;
         globalConfig.notify = document.getElementById('conf-notify').checked;
         globalConfig.resetOnFinish = document.getElementById('conf-reset-on-finish').checked;
+        globalConfig.blockF5 = document.getElementById('conf-block-f5').checked;
 
         localStorage.setItem(STORAGE_KEY_CONF, JSON.stringify(globalConfig));
         updateAllButtonLabels();
@@ -739,15 +747,23 @@
         });
     }
 
-    function initDailyPassword() {
+    // v40: 支援手動重置 force=true
+    function initDailyPassword(force = false) {
         const today = new Date();
         const m = today.getMonth() + 1; 
         const d = today.getDate();
         const val = (m + d) * 5;
+        
         const input = document.getElementById('decimalInput');
         if(input) {
             input.value = val;
             renderBinaryFromInput(); 
+            
+            if(force) {
+                showToast("已重置為今日預設密碼");
+                // 也可選擇清除手動存檔
+                localStorage.removeItem(STORAGE_KEY_PWD);
+            }
         }
     }
 
@@ -768,6 +784,11 @@
         const inputEl = document.getElementById('decimalInput');
         const val = parseInt(inputEl.value, 10);
         if (isNaN(val) || val < 5 || val > 255 || val % 5 !== 0) return;
+        
+        // 存檔，供使用者保留手動修改的狀態 (若需要)
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const dataToSave = { refDate: today.toISOString(), refValue: val };
+        localStorage.setItem(STORAGE_KEY_PWD, JSON.stringify(dataToSave));
         showToast("每日密碼已儲存");
     }
 
@@ -927,7 +948,6 @@
         const t2 = formatTimeText(globalConfig.d2);
         const t3 = formatTimeText(globalConfig.d3);
 
-        // v39: 增加 id 以便控制 disabled
         pane.innerHTML = `
             <div class="timer-display-row">
                 <button id="btn-start-notify-${id}" class="btn-start-notify" onclick="triggerStartNotification(${id})">啟動通知</button>
@@ -1027,7 +1047,6 @@
 
         document.getElementById(`sub-reset-btn${btnStep}-${tabId}`).disabled = false;
         
-        // v39: 鎖定 啟動通知 按鈕
         const notifyBtn = document.getElementById(`btn-start-notify-${tabId}`);
         if(notifyBtn) notifyBtn.disabled = true;
 
@@ -1068,7 +1087,6 @@
         const t2 = formatTimeText(globalConfig.d2);
         const t3 = formatTimeText(globalConfig.d3);
 
-        // v39: 若重置的是 1王，代表全重置，解鎖啟動通知按鈕
         if (btnStep === 1) {
              const notifyBtn = document.getElementById(`btn-start-notify-${tabId}`);
              if(notifyBtn) notifyBtn.disabled = false;
@@ -1112,7 +1130,6 @@
         document.getElementById(`sub-reset-btn2-${tabId}`).disabled = true;
         document.getElementById(`sub-reset-btn3-${tabId}`).disabled = true;
         
-        // v39: 全重置時，解鎖啟動通知按鈕
         const notifyBtn = document.getElementById(`btn-start-notify-${tabId}`);
         if(notifyBtn) notifyBtn.disabled = false;
         
